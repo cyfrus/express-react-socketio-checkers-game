@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.list_menu {
+  list-style: none;
+  text-align: center;
+}
+.list_menu li {
+  margin: 20px;
+  font-size: 25px;
+}
+.login {
+  border: 1px solid gray;
+  padding: 40px;
+  border-radius: 10px;
+  margin-top: 50px;
+}
+
+.navigation {
+  margin-bottom: 50px;
+}
+
+.aiButton, .playerButton {
+  width: 47%;
+  height: 50px;
+  background-color: white;
+  border: 1px solid lightgray;
+}
+.playerButton {
+  float: right;
+}
+.searchbutton {
+  margin-top: 30px;
+}
+.searchTitle {
+  margin-bottom: 30px;
+}
+.active {
+  border: 1px solid green;
+}
