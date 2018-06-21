@@ -41,3 +41,19 @@ body {
 .active {
   border: 1px solid green;
 }
+.accept-btn, .decline-btn {
+  background-color: white;
+  border-width: 2px;
+  border-style: groove;
+  padding: 10px 30px;
+  margin: 20px;
+}
+
+.accept-btn {
+  border-color: green;
+  color: green;
+}
+.decline-btn {
+  border-color: red;
+  color: red;
+}

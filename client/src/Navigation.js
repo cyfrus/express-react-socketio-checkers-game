@@ -22,11 +22,14 @@ const Navigation = () => (
       <PrivateRoute path="/tournaments" component={Tournaments} />
       <PrivateRoute path="/rules" component={Rules} />
       <PrivateRoute path="/about" component={About} />
+      <PrivateRoute path="/game/:gameId" component={Game} />
     </div>
   </Router>
 );
 
-
+const Game = () => (
+  <h3>Game</h3>
+);
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
