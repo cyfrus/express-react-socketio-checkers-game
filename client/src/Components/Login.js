@@ -1,11 +1,5 @@
 import React, { Component } from "react";
-import {
-  BrowserRouter as Router,
-  Route,
-  Link,
-  Redirect,
-  withRouter
-} from "react-router-dom";
+import {Redirect} from "react-router-dom";
 import axios from "axios";
 
 export var authenticated = false;
@@ -15,9 +9,11 @@ class Login extends Component {
     super(props);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+
     this.state = {
       redirectToReferrer: false,
-      authenticated: false
+      authenticated: false,
+      test: false
     };
   }
 
@@ -77,6 +73,7 @@ class Login extends Component {
     });
   }
 
+
   render() {
     if (this.state.authenticated) {
       return (
@@ -118,6 +115,7 @@ class Login extends Component {
               className="btn btn-outline-primary"
               onClick={this.handleSubmit}
             />
+
           </div>
         </div>
       </div>

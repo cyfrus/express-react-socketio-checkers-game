@@ -2,9 +2,7 @@ import React from "react";
 import {
   BrowserRouter as Router,
   Route,
-  Link,
-  Redirect,
-  withRouter
+  Redirect
 } from "react-router-dom";
 import Login, {authenticated} from './Components/Login';
 import Home from './Components/Home';
@@ -12,10 +10,11 @@ import Tournaments from './Components/Tournaments';
 import About from './Components/About';
 import Rules from './Components/Rules';
 import Search from './Components/Search';
+import Game from './Components/GameComponents/Game';
 
 const Navigation = () => (
   <Router>
-    <div className="">
+    <div className="navContainer">
       <PrivateRoute path="/search" component={Search} />
       <PrivateRoute exact path="/" component={Home} />
       <Route path="/login" component={Login} />
@@ -27,9 +26,9 @@ const Navigation = () => (
   </Router>
 );
 
-const Game = () => (
-  <h3>Game</h3>
-);
+
+
+
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
