@@ -108,35 +108,30 @@ class Game extends React.Component {
         console.log(this.state.boardState);
         return (
             <div className="game">
-            <Board />
+            <Board squares={this.state.boardState} />
             </div>
         );
     }
 }
 
 class Board extends React.Component {
-    renderSquare(i) {
-      return <Square value={i} />;
+    renderSquare() {
+      return <Square />;
     }
   
     render() {
+        const board = this.props.squares.map((row) => {
+           return <div class="boardRow"> 
+            {
+                row.map((square) => {
+                    return <Square className="square" />;
+                })
+            }
+            </div>
+        });
       return (
-        <div>
-          <div className="board-row">
-            {this.renderSquare(0)}
-            {this.renderSquare(1)}
-            {this.renderSquare(2)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(3)}
-            {this.renderSquare(4)}
-            {this.renderSquare(5)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(6)}
-            {this.renderSquare(7)}
-            {this.renderSquare(8)}
-          </div>
+        <div className="board">
+            {board}
         </div>
       );
     }

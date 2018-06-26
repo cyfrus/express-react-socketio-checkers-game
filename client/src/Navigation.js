@@ -21,7 +21,7 @@ const Navigation = () => (
       <PrivateRoute path="/tournaments" component={Tournaments} />
       <PrivateRoute path="/rules" component={Rules} />
       <PrivateRoute path="/about" component={About} />
-      <PrivateRoute path="/game/:gameId" component={Game} />
+      <Route path="/game/:gameId" component={Game} />
     </div>
   </Router>
 );
