@@ -42,6 +42,11 @@ io.on('connection', function (socket) {
       removePlayer(socket.id);
       console.log(players);
   });
+
+  socket.on('declined', function () {
+    removePlayer(socket.id);
+    console.log(players);
+  });
   console.log("client connected!");
 });
 

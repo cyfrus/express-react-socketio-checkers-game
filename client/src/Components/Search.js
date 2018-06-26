@@ -17,6 +17,7 @@ class Search extends React.Component {
     this.changeDuration = this.changeDuration.bind(this);
     this.stopSearch = this.stopSearch.bind(this);
     this.acceptGame = this.acceptGame.bind(this);
+    this.declineGame = this.declineGame.bind(this);
   }
 
   componentDidUpdate(prevProps) {
@@ -40,7 +41,18 @@ class Search extends React.Component {
       duration: event.target.value
     });
   }
-  stopSearch() {
+
+  declineGame() {
+    this.setState({
+        searching: false,
+        gameID: ""
+    });
+    this.state.socket.emit("declined")  ;
+    console.log("declined");
+  }
+
+  stopSearch(event) {
+    console.log("stop searching!");
     this.setState({
       searching: false
     });

@@ -88,3 +88,110 @@ body, html {
   height: 100%;
   width: 12.5%;
 }
+.white {
+  background-color: white;
+}
+.black {
+  background-color: black;
+}
+
+/* old style */
+button:focus
+{
+  outline: 0;
+}
+.board
+{
+  min-width: 500px;
+  margin-bottom: 20px;
+}
+.square
+{
+  width: 50px;
+  height: 50px;
+  background-color: #FDF0D5;
+  border-style: solid;
+  border-width: 1px;
+  border-color: transparent;
+  margin:2px;
+}
+.playerred
+{
+  margin: auto;
+  display: block;
+  border:1px solid transparent;
+  height: 60%;
+  width: 80%;
+  background-color: #A31846;
+  border-radius:100%;
+}
+.playerblack
+{
+  margin: auto;
+  display: block;
+  border:1px solid transparent;
+  height: 60%;
+  width: 80%;
+  background-color: #3A3335;
+  border-radius:100%;
+}
+
+.selected
+{
+   border: 2px solid #3A3335;
+   box-shadow: 0px 0px 10px #3A3335;
+}
+
+.brown
+{
+  background-color: rgb(155, 93, 17);
+}
+
+.available
+{
+  border: 2px solid  #3A3335;
+  box-shadow: 0px 0px 10px #3A3335;
+}
+
+#root
+{
+  margin-top: 100px;
+}
+
+.player
+{
+  font-size: 2em;
+}
+
+.chatlist
+{
+  list-style: none;
+}
+
+.chatlist-div
+{
+  position: relative;
+  border-radius: 2px;
+  padding: 5px;
+  border:1px solid white;
+  height: 300px;
+  margin-bottom: 15px;
+  overflow-y: scroll;
+  word-break: break-all;
+}
+
+.sendtextbtn
+{
+  margin-top:5px;
+}
+.welcomediv
+{
+  padding: 20px;
+}
+.welcomediv div
+{
+  text-align: center;
+  width:100%;
+
+  padding: 20px;
+}
