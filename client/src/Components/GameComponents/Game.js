@@ -102,29 +102,34 @@ class Game extends React.Component {
         this.state = {
             boardState: Array(8).fill(Array(8).fill(null))
         }
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick() {
+        console.log("square was pressed!");
     }
     
     render() {
         console.log(this.state.boardState);
         return (
-            <div className="game">
-            <Board squares={this.state.boardState} />
+            <div className="row">
+                <div className="game col-md-5">
+                <Board squares={this.state.boardState} onClick={() => this.handleClick()} />
+                </div>
             </div>
         );
     }
 }
 
-class Board extends React.Component {
-    renderSquare() {
-      return <Square />;
-    }
-  
+class Board extends React.Component {  
     render() {
-        const board = this.props.squares.map((row) => {
-           return <div class="boardRow"> 
+        var id = 0;
+        const board = this.props.squares.map((row, index) => {
+           return <div key={index} className="boardRow"> 
             {
                 row.map((square) => {
-                    return <Square className="square" />;
+                    id++;
+                    return <Square  id={id} key={id} className="square" onClick={() => this.props.onClick()}/>;
                 })
             }
             </div>
@@ -143,7 +148,8 @@ class Square extends React.Component {
     }
     render() {
         return(
-            <div className="square">
+            <div className="square" onClick={this.props.onClick}>
+            {this.props.id}
             </div>
         );
     }
