@@ -105,8 +105,8 @@ class Game extends React.Component {
         this.handleClick = this.handleClick.bind(this);
     }
 
-    handleClick() {
-        console.log("square was pressed!");
+    handleClick(i) {
+        console.log(i);
     }
     
     render() {
@@ -114,7 +114,7 @@ class Game extends React.Component {
         return (
             <div className="row">
                 <div className="game col-md-5">
-                <Board squares={this.state.boardState} onClick={() => this.handleClick()} />
+                <Board squares={this.state.boardState} onClick={(i) => this.handleClick(i)} />
                 </div>
             </div>
         );
@@ -128,8 +128,8 @@ class Board extends React.Component {
            return <div key={index} className="boardRow"> 
             {
                 row.map((square) => {
-                    id++;
-                    return <Square  id={id} key={id} className="square" onClick={() => this.props.onClick()}/>;
+                    var i = id++;
+                    return <Square  id={i} key={id} className="square" onClick={() => this.props.onClick(i)}/>;
                 })
             }
             </div>
