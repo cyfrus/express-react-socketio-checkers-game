@@ -18,8 +18,11 @@ class Game extends React.Component {
                 boardState[i] = [];
            for(let z = 0; z < 8; z++){  
                if(((i === 0 || i === 2 || i === 6) && (z % 2)) || ((i === 1 || i === 5 || i === 7) && !(z % 2)))
-               {
-                    boardState[i][z] = {piece: true, pieceColor: ""};
+               {    
+                    if(i === 2 || i === 0 || i === 1)
+                    boardState[i][z] = {piece: true, pieceColor: "black"};
+                    else
+                    boardState[i][z] = {piece: true, pieceColor: "red"}
                } else {
                     boardState[i][z] = {piece: false, pieceColor: ""};
                }
@@ -68,7 +71,7 @@ class Board extends React.Component {
                 {
                     row.map((square, place) => {
                         var i = id++;
-                         return <Square color={this.determineColor(index, place)} id={i} key={id} className="square" piece={square.piece} onClick={() => this.props.onClick(i)} />;
+                         return <Square color={this.determineColor(index, place)} id={i} key={id} className="square" piece={square.piece} pieceColor={square.pieceColor} onClick={() => this.props.onClick(i)} />;
                     })
                 }
             </div>
@@ -91,13 +94,13 @@ class Square extends React.Component {
     render() {
         if(this.props.piece) {
            return(
-            <div className={"square " + this.props.color} onClick={this.props.onClick}>
-            <Player />
+            <div className={"d-flex align-items-center square " + this.props.color} onClick={this.props.onClick}>
+            <Player color={this.props.pieceColor} />
             </div>
         );    
         } else {
             return (
-            <div className={"square " + this.props.color} onClick={this.props.onClick}>
+            <div className={"d-flex align-items-center square " + this.props.color} onClick={this.props.onClick}>
             </div>
             );
         }
@@ -107,7 +110,7 @@ class Square extends React.Component {
 
 function Player(props) {
     return(
-        <div className="player">
+        <div className={" player" + props.color}>
         </div>
     );
 }

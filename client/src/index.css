@@ -87,6 +87,7 @@ body, html {
   border: 1px solid black;
   height: 100%;
   width: 12.5%;
+  padding: 0px;
 }
 .white {
   background-color: white;
@@ -108,10 +109,9 @@ button:focus
 
 .playerred
 {
-  margin: auto;
-  display: block;
+  margin: auto !important;
   border:1px solid transparent;
-  height: 60%;
+  height: 80%;
   width: 80%;
   background-color: #A31846;
   border-radius:100%;
@@ -119,9 +119,8 @@ button:focus
 .playerblack
 {
   margin: auto;
-  display: block;
   border:1px solid transparent;
-  height: 60%;
+  height: 80%;
   width: 80%;
   background-color: #3A3335;
   border-radius:100%;
@@ -185,10 +184,4 @@ button:focus
   width:100%;
 
   padding: 20px;
-}
-.player {
-  border-radius: 100%;
-  height: 90%;
-  width: 90%;
-  margin: auto;
 }
