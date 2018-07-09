@@ -1,9 +1,9 @@
-import React from "react";
+import React from 'react';
 import {
   BrowserRouter as Router,
   Route,
   Redirect
-} from "react-router-dom";
+} from 'react-router-dom';
 import Login, {authenticated} from './Components/Login';
 import Home from './Components/Home';
 import Tournaments from './Components/Tournaments';
