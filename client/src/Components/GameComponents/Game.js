@@ -29,11 +29,21 @@ class Game extends React.Component {
             turn: "red",
             redPieces: 12,
             whitePieces: 12,
-            selected: {row: null, square: null}
+            selected: {row: null, square: null},
+            availableMoves: []
         }
         this.handleClick = this.handleClick.bind(this);
     }
     
+    availableMoves() {
+        this.state.boardState.forEach((row) => {
+            row.forEach( square => {
+                if(this.boardState[this.state.selected.row][this.state.selected.square].piece){
+
+                }
+            })
+        })
+    }
 
     handleClick(row, square) {
         var boardState = this.state.boardState.slice();
