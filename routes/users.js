@@ -1,5 +1,5 @@
 var express = require('express');
-var db = require('../db/connection');
+//var db = require('../db/connection');
 var router = express.Router();
 
 /* GET users listing. */

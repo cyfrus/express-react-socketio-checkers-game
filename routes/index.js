@@ -1,5 +1,5 @@
 var express = require('express');
-var db = require('../db/connection');
+//var db = require('../db/connection');
 var bcrypt = require('bcrypt');
 var router = express.Router();
 

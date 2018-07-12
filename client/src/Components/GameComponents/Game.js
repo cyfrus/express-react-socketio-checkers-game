@@ -1,6 +1,5 @@
 import React from "react";
 import Board from "./Board";
-import { SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG } from "constants";
 
 function setTheGame() {
     var boardState = [8];
@@ -44,8 +43,13 @@ class Game extends React.Component {
         }
         if(this.state.selected.row !== null && this.state.selected.square !== null) {
             boardState[this.state.selected.row][this.state.selected.square].selected = false;
-        } 
-        selected = {row: row, square: square};
+        }
+        if(this.state.selected.row === row && this.state.selected.square === square) {
+            selected = {row: null, square: null};
+        } else {
+            selected = {row: row, square: square};
+        }
+        
         
         this.setState({
             boardState: boardState,
