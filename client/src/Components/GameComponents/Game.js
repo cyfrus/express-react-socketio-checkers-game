@@ -35,14 +35,31 @@ class Game extends React.Component {
         this.handleClick = this.handleClick.bind(this);
     }
     
-    availableMoves() {
-        this.state.boardState.forEach((row) => {
-            row.forEach( square => {
-                if(this.boardState[this.state.selected.row][this.state.selected.square].piece){
+    availableMoves(row, square) {
+        var moves = [];
+        var row = row;
+        var square = square;
+        if(row === 0 && this.boardState[row][square].pieceColor === "red" && this.state.turn === "red") {
+            return moves;
+        }
+        
+        if(this.state.boardState[row][square].pieceColor === "red"){
+             if(!this.state.boardState[row-1][square-1].piece) {
+                moves.push({row: row-1, square: square-1});
+             }
+             if(!this.state.boardState[row-1][square+1].piece){
+                moves.push({row: row-1, square: square+1});
+             }
+        }
+        return moves;
+    }
 
-                }
-            })
-        })
+    checkJumps(availableMoves, row, square){
+        if(row === 1 && this.state.turn === "red")
+        return availableMoves;
+        availableMoves.forEach(move => {
+            if(this.state.turn === "red" && move)
+        });
     }
 
     handleClick(row, square) {
@@ -58,13 +75,15 @@ class Game extends React.Component {
             selected = {row: null, square: null};
         } else {
             selected = {row: row, square: square};
+            console.log(this.availableMoves(selected.row, selected.square));
         }
         
-        
+       
         this.setState({
             boardState: boardState,
             selected: selected
         })
+        
         console.log(`${row}, ${square}`);
     }
     
