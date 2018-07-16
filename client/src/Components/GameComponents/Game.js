@@ -33,33 +33,40 @@ class Game extends React.Component {
             availableMoves: []
         }
         this.handleClick = this.handleClick.bind(this);
+        this.checkJumps = this.checkJumps.bind(this);
     }
     
     availableMoves(row, square) {
         var moves = [];
-        var row = row;
-        var square = square;
         if(row === 0 && this.boardState[row][square].pieceColor === "red" && this.state.turn === "red") {
             return moves;
         }
         
         if(this.state.boardState[row][square].pieceColor === "red"){
-             if(!this.state.boardState[row-1][square-1].piece) {
+             if(square !== 0 && !this.state.boardState[row-1][square-1].piece) {
                 moves.push({row: row-1, square: square-1});
              }
-             if(!this.state.boardState[row-1][square+1].piece){
+             if(square !== 7 && !this.state.boardState[row-1][square+1].piece){
                 moves.push({row: row-1, square: square+1});
              }
         }
-        return moves;
+        return this.checkJumps(moves, row);
     }
 
-    checkJumps(availableMoves, row, square){
+    checkJumps(availableMoves, row){
+        var avMoves = availableMoves.slice();
+        var nextRow = this.state.turn === "red" ? row - 1 : row + 1;
         if(row === 1 && this.state.turn === "red")
         return availableMoves;
-        availableMoves.forEach(move => {
-            if(this.state.turn === "red" && move)
+        avMoves.slice(availableMoves.length-2, availableMoves.length).forEach(move => {
+            if(this.state.turn === "red" && move.row < 7 && this.state.boardState[move.row-1][move.square-1].piece) {
+                avMoves.push({row: move.row-1, square: move.square-1});
+            }
+            if(this.state.turn === "red" && move.row < 7 && this.state.boardState[move.row-1][move.square-1].piece) {
+                avMoves.push({row: move.row-1, square: move.square-1});
+            }
         });
+        this.checkJumps(avMoves, nextRow);
     }
 
     handleClick(row, square) {
