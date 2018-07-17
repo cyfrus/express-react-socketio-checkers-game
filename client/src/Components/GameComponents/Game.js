@@ -59,19 +59,22 @@ class Game extends React.Component {
         if(row === 1 && this.state.turn === "red")
         return availableMoves;
         avMoves.slice(availableMoves.length-2, availableMoves.length).forEach(move => {
-            if(this.state.turn === "red" && move.row < 7 && this.state.boardState[move.row-1][move.square-1].piece) {
-                avMoves.push({row: move.row-1, square: move.square-1});
+            if(this.state.turn === "red" && move.row >=2 && this.state.boardState[move.row-1][move.square-1].piece) {
+                avMoves.push({row: move.row-2, square: move.square-1});
             }
-            if(this.state.turn === "red" && move.row < 7 && this.state.boardState[move.row-1][move.square-1].piece) {
-                avMoves.push({row: move.row-1, square: move.square-1});
+            if(this.state.turn === "black" && move.row <= 6 && this.state.boardState[move.row-1][move.square-1].piece) {
+                avMoves.push({row: move.row-2, square: move.square-2});
             }
         });
-        this.checkJumps(avMoves, nextRow);
+        return this.checkJumps(avMoves, nextRow);
     }
 
     handleClick(row, square) {
         var boardState = this.state.boardState.slice();
-        var selected;
+        var selected, availableMoves;
+        if(this.state.selected.row && this.state.selected.square) {
+            this.movePiece(row, square);
+        }
         if(boardState[row][square].piece) {
             boardState[row][square].selected = true;
         }
@@ -82,18 +85,37 @@ class Game extends React.Component {
             selected = {row: null, square: null};
         } else {
             selected = {row: row, square: square};
-            console.log(this.availableMoves(selected.row, selected.square));
+            availableMoves = this.availableMoves(selected.row, selected.square);
+            console.log(availableMoves);
         }
         
        
         this.setState({
             boardState: boardState,
-            selected: selected
+            selected: selected,
+            availableMoves: availableMoves
         })
         
         console.log(`${row}, ${square}`);
     }
     
+    movePiece(row, square) {
+        var boardState = this.state.boardState.slice();
+        var validMove = this.state.availableMoves.find(move => {
+            return move.row === row && move.square === square;
+        });
+
+        if(validMove) {
+            boardState[row][square].piece = true;
+            boardState[row][square].pieceColor = this.state.turn;
+            boardState[this.state.selected.row][this.state.selected.square].piece = false;
+            boardState[this.state.selected.row][this.state.selected.square].pieceColor = "";
+            this.setState({
+                boardState: boardState
+            })
+        }
+    }
+
     render() {
         console.log(this.state.boardState);
         return (
