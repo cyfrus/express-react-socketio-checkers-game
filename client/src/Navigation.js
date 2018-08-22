@@ -11,6 +11,7 @@ import About from './Components/About';
 import Rules from './Components/Rules';
 import Search from './Components/Search';
 import Game from './Components/GameComponents/Game';
+import Registration from './Components/Registration';
 
 const Navigation = () => (
   <Router>
@@ -21,6 +22,7 @@ const Navigation = () => (
       <PrivateRoute path="/tournaments" component={Tournaments} />
       <PrivateRoute path="/rules" component={Rules} />
       <PrivateRoute path="/about" component={About} />
+      <Route path="/registration" component={Registration} />
       <Route path="/game/:gameId" component={Game} />
     </div>
   </Router>

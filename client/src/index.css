@@ -188,3 +188,13 @@ button:focus
 .selected {
   border: 1px solid red;
 }
+.registrationTitle, .loginTitle {
+  margin-bottom: 20px;
+}
+.registrationButton, .registrationLink, .loginButton {
+  margin-top: 25px;
+  display: block;
+}
+.registrationParagraph {
+  font-style: italic;
+}

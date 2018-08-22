@@ -33,34 +33,6 @@ class Login extends Component {
     .catch(function (error) {
       console.log(error);
     });
-
-
-    // fetch("/authenticate", {
-    //   method: "POST", // or 'PUT'
-    //   body: JSON.stringify(data), // data can be `string` or {object}!
-    //   headers: new Headers({
-    //     "Content-Type": "application/json"
-    //   })
-    // }).then(
-    //   function(response) {
-    //     if (response.status !== 200) {
-    //       console.log(
-    //         "Looks like there was a problem. Status Code: " + response.status
-    //       );
-    //       return;
-    //     }
-
-    //     // Examine the text in the response
-    //     response.json().then(
-    //       function(data) {
-    //         this.setState({
-    //           authenticated: data.auth
-    //         });
-    //         authenticated = true;
-    //       }.bind(this)
-    //     );
-    //   }.bind(this)
-    // );
   }
 
   handleInputChange(event) {
@@ -87,7 +59,7 @@ class Login extends Component {
     return (
       <div className="row">
         <div className="col-md-5">
-          <h3>Login</h3>
+          <h3 className="loginTitle">Login</h3>
           <div>
             <div className="form-group">
               {" "}
@@ -111,11 +83,11 @@ class Login extends Component {
             </div>
             <input
               type="button"
-              value="Submit"
-              className="btn btn-outline-primary"
+              value="Log In"
+              className="btn btn-outline-primary form-control loginButton"
               onClick={this.handleSubmit}
             />
-
+          <a className="registrationLink" href="/registration">Registration</a>
           </div>
         </div>
       </div>

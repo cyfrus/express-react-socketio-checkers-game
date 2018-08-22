@@ -2,13 +2,15 @@ import React from "react";
 import {Redirect} from "react-router-dom";
 import io from "socket.io-client";
 
+
+const socket = io("http://localhost:3001");
+
 class Search extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       opponent: "player",
       duration: "10",
-      socket: io("http://localhost:3001"),
       gameID: "",
       gameStatus: null
     };
@@ -21,7 +23,7 @@ class Search extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    this.state.socket.on("foundGame", function(data) {
+    socket.on("foundGame", function(data) {
       this.setState({
           gameID: data.game
       });
@@ -47,7 +49,7 @@ class Search extends React.Component {
         searching: false,
         gameID: ""
     });
-    this.state.socket.emit("declined")  ;
+    socket.emit("declined")  ;
     console.log("declined");
   }
 
@@ -56,7 +58,7 @@ class Search extends React.Component {
     this.setState({
       searching: false
     });
-    this.state.socket.emit("stopSearch", {});
+    socket.emit("stopSearch", {});
   }
 
   startSearch(event) {
@@ -64,7 +66,7 @@ class Search extends React.Component {
       searching: true
     });
     console.log("handle submit!");
-    this.state.socket.emit("search", {
+    socket.emit("search", {
       opponent: this.state.opponent,
       duration: this.state.duration
     });
@@ -73,7 +75,7 @@ class Search extends React.Component {
     this.setState({
         gameStatus: "ready"
     })
-    this.state.socket.emit('accepted');
+    socket.emit('accepted');
   }
   render() {
     if(this.state.gameStatus === "ready") {
@@ -165,3 +167,4 @@ class Search extends React.Component {
 }
 
 export default Search;
+export {socket as Socket};
