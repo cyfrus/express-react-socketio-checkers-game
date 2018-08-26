@@ -40,13 +40,22 @@ class Game extends React.Component {
         this.handleClick = this.handleClick.bind(this);
         this.checkJumps = this.checkJumps.bind(this);
         this.movePiece = this.movePiece.bind(this);
+        socket.emit('newGame', {});
     }
-
+    componentDidUpdate() {
+        
+    }
     componentDidMount() {
         socket.on("changeTurn", (data) => {
           this.setState({
               turn: data.turn
           });
+        });
+        socket.on('updateBoardState', (data) => {
+            this.setState({
+                boardState: data.boardState,
+                selected: false
+            })
         });
     }
     
@@ -86,15 +95,14 @@ class Game extends React.Component {
     }
 
     handleClick(row, square) {
-        console.log(`Selektirani row je ${row} square ${square}`);
         var boardState = this.state.boardState.slice();
         var selectedLocation, selected, availableMoves;
         if(this.state.selected) {
+            boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].selected = false;
             if(this.movePiece(row, square)) {
                 boardState = this.movePiece(row, square);
-                socket.emit('move');
+                socket.emit('move', {boardState: boardState});
             }
-            boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].selected = false;
             selectedLocation = {row: false, square: false};
             selected = false;
         } else if(boardState[row][square].piece) {
@@ -102,17 +110,12 @@ class Game extends React.Component {
             boardState[row][square].selected = true;
             selected = true;
             availableMoves = this.availableMoves(row, square);
-            console.log(availableMoves);
         }
-       
         this.setState({
-            boardState: boardState,
             selectedLocation: selectedLocation,
             availableMoves: availableMoves,
             selected: selected
         })
-        
-        console.log(`${row}, ${square}`);
     }
     
     movePiece(row, square) {
@@ -132,7 +135,6 @@ class Game extends React.Component {
     }
 
     render() {
-        console.log(this.state.boardState);
         return (
             <div className="row">
                 <div className="game col-md-5">

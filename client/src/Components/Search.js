@@ -1,9 +1,8 @@
 import React from "react";
-import {Redirect} from "react-router-dom";
+import { Redirect } from "react-router-dom";
 import io from "socket.io-client";
 
-
-const socket = io("http://localhost:3001");
+const socket = io.connect("http://localhost:3001");
 
 class Search extends React.Component {
   constructor(props) {
@@ -23,13 +22,14 @@ class Search extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    socket.on("foundGame", function(data) {
-      this.setState({
+    socket.on(
+      "foundGame",
+      function(data) {
+        this.setState({
           gameID: data.game
-      });
-    }.bind(this));
-
-    console.log(this.state.gameID);
+        });
+      }.bind(this)
+    );
   }
 
   selectOpponent(event) {
@@ -46,10 +46,10 @@ class Search extends React.Component {
 
   declineGame() {
     this.setState({
-        searching: false,
-        gameID: ""
+      searching: false,
+      gameID: ""
     });
-    socket.emit("declined")  ;
+    socket.emit("declined");
     console.log("declined");
   }
 
@@ -73,15 +73,13 @@ class Search extends React.Component {
   }
   acceptGame() {
     this.setState({
-        gameStatus: "ready"
-    })
-    socket.emit('accepted');
+      gameStatus: "ready"
+    });
+    socket.emit("accepted");
   }
   render() {
-    if(this.state.gameStatus === "ready") {
-      return(
-        <Redirect to={"/game/" + this.state.gameID}/>
-      );
+    if (this.state.gameStatus === "ready") {
+      return <Redirect to={"/game/" + this.state.gameID} />;
     }
     if (!this.state.searching) {
       return (
@@ -141,13 +139,17 @@ class Search extends React.Component {
         </div>
       );
     } else if (this.state.gameID !== "") {
-        return(
-            <div className="text-center"> 
-                <h4 className="">Found the opponent</h4>
-                <button className="accept-btn" onClick={this.acceptGame}>Accept</button>
-                <button className="decline-btn" onClick={this.declineGame}>Decline</button>
-            </div>
-        );
+      return (
+        <div className="text-center">
+          <h4 className="">Found the opponent</h4>
+          <button className="accept-btn" onClick={this.acceptGame}>
+            Accept
+          </button>
+          <button className="decline-btn" onClick={this.declineGame}>
+            Decline
+          </button>
+        </div>
+      );
     } else {
       return (
         <div className="row">
@@ -167,4 +169,4 @@ class Search extends React.Component {
 }
 
 export default Search;
-export {socket as Socket};
+export { socket as Socket };

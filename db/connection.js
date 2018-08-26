@@ -12,13 +12,23 @@ var connection = mysql.createConnection({
 
 connection.connect();
 
-var insert_user = function(username, email, password) {
+var insert_user = function(username, email, password, callback) {
   bcrypt.genSalt(saltRounds, function(err, salt) {
     bcrypt.hash(password, salt, function(err, hash) {
         // Store hash in your password DB.
         connection.query('INSERT INTO users SET ?', {username: username, email: email, password: hash}, function (error, results, fields) {
-          if (error) throw error;
-          console.log(results.insertId);
+          if (error) {
+            console.log(error);
+            callback({
+              message: 'Duplicate username or email !',
+              success: false
+            });
+          } else {
+            callback({
+              message: 'Successfuly registered. Have fun playing !',
+              success: true
+            });
+          }
         });
     });
   });

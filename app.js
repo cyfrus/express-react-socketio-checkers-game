@@ -11,11 +11,37 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
+
+function setTheGame() {
+  var boardState = [8];
+      for(let i = 0; i < 8; i++) {
+              boardState[i] = [8];
+         for(let z = 0; z < 8; z++){  
+             if(((i === 0 || i === 2 || i === 6) && (z % 2)) || ((i === 1 || i === 5 || i === 7) && !(z % 2)))
+             {    
+                  if(i === 2 || i === 0 || i === 1)
+                  boardState[i][z] = {piece: true, pieceColor: "black"};
+                  else
+                  boardState[i][z] = {piece: true, pieceColor: "red"}
+             } else {
+                  boardState[i][z] = {piece: false, pieceColor: ""};
+             }
+             
+         }
+      }
+      return boardState;
+}
+
 var players = [];
 
 
-var room, turn = "red", opponent;
+var roomID, turn = "red", opponent;
 io.on('connection', function (socket) {
+  var boardState = [];
+  socket.on('newGame', function (data) {
+    boardState = setTheGame();
+    console.log("New game!");
+  });
   socket.on('search', function (data) {
       var player = {
         socket: socket,
@@ -26,19 +52,18 @@ io.on('connection', function (socket) {
       opponent = findOpponent(player);
       console.log("Protivnik je " + opponent);
       if(opponent) {
-        room = generateRoomName();
-        opponent.socket.join(room);
-        socket.join(room);
-        io.to(room).emit('foundGame', {game: room});
+        roomID = generateRoomName();
+        opponent.socket.join(roomID);
+        socket.join(roomID);
+        io.to(roomID).emit('foundGame', {game: roomID});
       }
   });
 
   socket.on('move', function(data){
     turn = turn === "red" ? "black" : "red";
-    console.log("change turn " + turn + "room " + room);
-    socket.join(room);
-    opponent.socket.join(room);
-    io.to(room).emit('changeTurn', {turn: turn});
+    console.log("change turn " + turn + "room " + roomID);
+    io.to(roomID).emit('changeTurn', {turn: turn});
+    io.to(roomID).emit('updateBoardState', data);
   });
 
   socket.on('stopSearch', function (data) {

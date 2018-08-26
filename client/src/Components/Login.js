@@ -84,7 +84,7 @@ class Login extends Component {
             <input
               type="button"
               value="Log In"
-              className="btn btn-outline-primary form-control loginButton"
+              className="btn btn-dark form-control loginButton"
               onClick={this.handleSubmit}
             />
           <a className="registrationLink" href="/registration">Registration</a>

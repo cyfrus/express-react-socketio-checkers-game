@@ -17,21 +17,25 @@ router.get('/test', function (req, res, next){
 router.post('/register', function(req, res, next){
   console.log("insert zahtjev!!");
   console.log(req.body.username);
-  db.insert_user(req.body.username, req.body.email, req.body.password);
+  db.insert_user(req.body.username, req.body.email, req.body.password, (result) => {
+    res.json(result)
+  });
 }); 
 
 router.post('/authenticate', function(req, res, next){
   if(req.body.username && req.body.password) {
     db.authenticate(req.body.username, req.body.password, function(result) {
-      bcrypt.compare(req.body.password, result.password, function(err, authed) {
-        var auth = {auth: false};
-            if(authed) {
-              auth.auth = true;
-              res.json(auth);
-            } else {
-              res.json(auth);
-            }
-        });
+      if(result) {
+        bcrypt.compare(req.body.password, result.password, function(err, authed) {
+          var auth = {auth: false};
+              if(authed) {
+                auth.auth = true;
+                res.json(auth);
+              } else {
+                res.json(auth);
+              }
+          });
+      }
      });
   } else {
     res.json({ autentication: "failed"});
