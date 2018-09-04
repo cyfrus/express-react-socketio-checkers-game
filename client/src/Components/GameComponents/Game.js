@@ -42,9 +42,7 @@ class Game extends React.Component {
         this.movePiece = this.movePiece.bind(this);
         socket.emit('newGame', {});
     }
-    componentDidUpdate() {
-        
-    }
+ 
     componentDidMount() {
         socket.on("changeTurn", (data) => {
           this.setState({
@@ -80,19 +78,48 @@ class Game extends React.Component {
                 moves.push({row: row+1, square: square-1, remove: []});
              }
         }
+        moves = this.checkJumps([{row: row, square: square}], moves);
+        console.dir(moves);
         return moves;
     }
 
-    checkJumps(jumps, row, square){
-           
+    checkJumps(positions, moves){
+        let boardState = this.state.boardState,
+            newPositions = [];
+
+        if(!positions.length) {
+            return moves;
+        }
+        positions.forEach(position => {
+            if(!this.outOfBoard(position.row + 2, position.square + 2) && this.state.turn === "black" && boardState[position.row + 1][position.square + 1].pieceColor === "red" && !boardState[position.row + 2][position.square + 2].piece) {
+                newPositions.push({row: position.row + 2, square: position.square + 2});
+                moves.push({row: position.row + 2, square: position.square + 2});
+            }
+            if(!this.outOfBoard(position.row + 2, position.square - 2) && this.state.turn === "black" && boardState[position.row + 1][position.square - 1].pieceColor === "red" && !boardState[position.row + 2][position.square - 2].piece) {
+                newPositions.push({row: position.row + 2, square: position.square - 2});
+                moves.push({row: position.row + 2, square: position.square - 2});
+            }
+            if(!this.outOfBoard(position.row - 2, position.square - 2) && this.state.turn === "red" && boardState[position.row - 1][position.square - 1].pieceColor === "black" && !boardState[position.row - 2][position.square - 2].piece) {
+                newPositions.push({row: position.row - 2, square: position.square - 2});
+                moves.push({row: position.row - 2, square: position.square - 2});
+            }
+            if(!this.outOfBoard(position.row - 2, position.square + 2) && this.state.turn === "red" && boardState[position.row - 1][position.square + 1].pieceColor === "black" && !boardState[position.row - 2][position.square + 2].piece) {
+                newPositions.push({row: position.row - 2, square: position.square + 2});
+                moves.push({row: position.row - 2, square: position.square + 2});
+            }
+        });
+        
+        return this.checkJumps(newPositions, moves);
     }
 
-    unableToJump(row, square) {
-        if((row >= 6 && square >= 6 && square <= 1 && this.state.turn === "red") || (row <= 1 && square >= 6 && square <= 1 && this.state.turn === "black")) {
+    outOfBoard(row, square) {
+        if(row > 7 || row < 0 || square < 0 || square > 7) {
             return true;
-        }
+        } 
         return false;
     }
+
+ 
 
     handleClick(row, square) {
         var boardState = this.state.boardState.slice();
@@ -115,14 +142,17 @@ class Game extends React.Component {
             selectedLocation: selectedLocation,
             availableMoves: availableMoves,
             selected: selected
-        })
+        });
     }
     
     movePiece(row, square) {
         var boardState = this.state.boardState.slice();
-        var validMove = this.state.availableMoves.find(move => {
-            return move.row === row && move.square === square;
-        });
+        if(this.state.availableMoves) {
+            var validMove = this.state.availableMoves.find(move => {
+                return move.row === row && move.square === square;
+            });
+        }
+        
 
         if(validMove) {
             boardState[row][square].piece = true;
