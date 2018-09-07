@@ -48,6 +48,7 @@ class Registration extends React.Component {
     this.setState({
       [e.target.name]: e.target.value
     }, () => {
+      console.log(this.state);
       this.verifyErrors();
     });
   }
@@ -57,7 +58,8 @@ class Registration extends React.Component {
         .post("/register", {
           username: this.state.username,
           email: this.state.email,
-          password: this.state.password
+          password: this.state.password,
+          about: this.state.about.slice(0, 200)
         })
         .then(response => {
           console.log(response);
@@ -125,6 +127,10 @@ class Registration extends React.Component {
               <div className="errorMessage">
                 {this.state.errors.notMatchingPasswordsMessage}
               </div>
+            </div>
+            <div className="form-group">
+              <label>Write something about yourself</label>
+              <textarea name="about" max="255" className="form-control" onChange={this.handleInputChange}></textarea>
             </div>
             <p className="registrationParagraph">All fields are required !</p>
             <div className="message">{this.state.message}</div>

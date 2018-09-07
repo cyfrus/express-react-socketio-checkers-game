@@ -1,14 +1,27 @@
 import React from "react";
 import {Link} from "react-router-dom";
-
+import axios from "axios";
 
 class Home extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      numberOfPlayers: 0
+    }
   }
 
   componentDidMount() {
-    
+    axios.get('/getNumOfPlayers')
+    .then(function (response) {
+      console.log(response);
+        this.setState({
+          numberOfPlayers : response.data.numberOfPlayers,
+          error: response.data.auth ? "" : "Incorrect username or password!"
+        });
+    }.bind(this))
+    .catch(function (error) {
+      console.log(error);
+    });
   }
 
   render() {
@@ -31,7 +44,7 @@ class Home extends React.Component {
                 <Link to="/about">About</Link>
               </li>
               <li>
-                
+                <Link to="/profile">Profile</Link>
               </li>
             </ul>
           </div>
@@ -43,7 +56,10 @@ class Home extends React.Component {
           </div>
           </div>
           <div className="col-md-6 infoBanner2">
-            <p className="brag-paragraph">Number of players registered on website: </p>
+            <p className="brag-paragraph">Number of players registered on website: <span>{this.state.numberOfPlayers}</span></p>
+            <p className="brag-paragraph">
+            Number of matches played: 
+            </p>
           </div>
         </div>
       </div>

@@ -2,7 +2,8 @@ import React from 'react';
 import {
   BrowserRouter as Router,
   Route,
-  Redirect
+  Redirect,
+  withRouter
 } from 'react-router-dom';
 import Login, {authenticated} from './Components/Login';
 import Home from './Components/Home';
@@ -11,37 +12,77 @@ import About from './Components/About';
 import Rules from './Components/Rules';
 import Search from './Components/Search';
 import Game from './Components/GameComponents/Game';
+import Profile from './Components/Profile';
 import Registration from './Components/Registration';
+import EditProfile from './Components/EditProfile';
 
 const Navigation = () => (
   <Router>
     <div className="navContainer">
       <PrivateRoute path="/search" component={Search} />
       <PrivateRoute exact path="/" component={Home} />
-      <Route path="/login" component={Login} />
+      <PublicRoute path="/login" component={Login} />
       <PrivateRoute path="/tournaments" component={Tournaments} />
       <PrivateRoute path="/rules" component={Rules} />
       <PrivateRoute path="/about" component={About} />
-      <Route path="/registration" component={Registration} />
-      <Route path="/game/:gameId" component={Game} />
+      <PrivateRoute path="/profile" component={Profile} />
+      <PrivateRoute exact path="/edit" component={EditProfile} />
+      <PublicRoute path="/registration" component={Registration} />
+      <PrivateRoute path="/game/:gameId" component={Game} />
+      <div><AuthButton /></div>
     </div>
   </Router>
 );
 
 
-
+const AuthButton = withRouter(
+  ({ history }) =>
+    sessionStorage.getItem("authenticated") === "yes" ? (
+      <p>
+        <button
+          onClick={() => {
+            sessionStorage.clear();
+            history.push('/login');
+          }}
+        >
+          Sign out
+        </button>
+      </p>
+    ) : (
+      <p>You are not logged in.</p>
+    )
+)
 
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
     render = { props =>
-      authenticated ? (
+      sessionStorage.getItem('username') ? (
         <Component {...props} />
       ) : (
         <Redirect
           to={{
             pathname: "/login",
+            state: { from: props.location }
+          }}
+        />
+      )
+    }
+  />
+);
+
+
+const PublicRoute = ({ component: Component, ...rest }) => (
+  <Route
+    {...rest}
+    render = { props =>
+      !sessionStorage.getItem('username') ? (
+        <Component {...props} />
+      ) : (
+        <Redirect
+          to={{
+            pathname: "/",
             state: { from: props.location }
           }}
         />

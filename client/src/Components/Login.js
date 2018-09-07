@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import {Redirect} from "react-router-dom";
 import axios from "axios";
 
-export var authenticated = false;
 
 class Login extends Component {
   constructor(props) {
@@ -27,8 +26,13 @@ class Login extends Component {
     axios.post('/authenticate', data)
     .then(function (response) {
       console.log(response);
-        authenticated = response.data.auth;
-        
+      if(response.data.auth) {
+        sessionStorage.setItem('username', response.data.user.username);
+        sessionStorage.setItem('about', response.data.user.about);
+        sessionStorage.setItem('MMR', response.data.user.MMR);
+        sessionStorage.setItem('email', response.data.user.email);
+        sessionStorage.setItem('authenticated', "yes");
+      }
         this.setState({
           authenticated : response.data.auth,
           error: response.data.auth ? "" : "Incorrect username or password!"

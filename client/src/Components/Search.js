@@ -87,6 +87,7 @@ class Search extends React.Component {
           <p>{this.state.gameModeDescriptionPlayer}</p>
         </div>
       } else {
+        description = 
         <div className="descriptionDiv">
           <p>{this.state.gameModeDescriptionAI}</p>
         </div>  
