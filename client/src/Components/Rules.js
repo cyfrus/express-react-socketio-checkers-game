@@ -1,38 +1,49 @@
 import React from "react";
+import OldImage1 from "../images/oldPicture1.jpg";
+import NormalBoard from "../images/normalBoard.jpg";
+
 
 class Rules extends React.Component {
   render() {
     return (
-      <div>
+      <div className="row">
+        <div className="col-md-6 offset-md-3">
         <h1>About</h1>
-        <p>
+        <p className="rulesParagraph">
           Checkers is actually the American version of an internationally
           popular game called Draughts (pronounced "drafts") which has a number
           of different variants. The game is incredibly old and has a
           fascinating history. It has also been the focus of several inventive
           computer programmers interested in artificial intelligence.
         </p>
+        <div>
+          <img className="image normalBoard" src={NormalBoard}/>
+        </div>
         <h4>The History of Checkers</h4>
-        <p>
+        <p className="rulesParagraph">
           The first Checkers-like playing board was discovered by archaeologists
           in a dig in Mesopotamia (now Iraq) in the city of Ur.
         </p>
-        <p>
+        <p className="rulesParagraph">
           Carbon dating showed the board to be from about 3000 BCE, or more than
           5000 years old.
         </p>
-        <p>
+        <div className="text-center imgContainer">
+        <img className="image OldImage1" src={OldImage1} />
+        </div>
+        
+        <p> 
           While the rules of Mesopotamian Checkers are unknown, historians do
           know the rules of an ancient Egyptian Checkers game called Alquerque.
           This game may have originated about 1400 BCE, and was popular until
           the Middle Ages.
         </p>
-        <p>
+        <p className="rulesParagraph">
           In 1100 CE, a new version of Checkers, Fierges, was invented by a
           Frenchman. This version, played on a chess board, was generally played
           by women (much as Mah Jong is played today).
         </p>
-        <p>
+        <p className="rulesParagraph">
           Around 1500, the first books were written about the game which was now
           called Draughts. In 1847, the first Draughts and Checkers
           championships were played with formal awards given. Changes were made
@@ -41,17 +52,17 @@ class Rules extends React.Component {
           across locations and playing situations.
         </p>
         <h4>Computers, AI, and Checkers</h4>
-        <p>
+        <p className="rulesParagraph">
           Like chess, checkers has always been interesting to computer
           programmers because it is a game of mathematical possibilities.
         </p>
-        <p>
+        <p className="rulesParagraph">
           The very first computer program built to play Checkers was created in
           1952 by programmer Arthur L. Samuel. Since then, many more advanced
           and complex Checkers programs have been developed; some have defeated
           even very advanced players.
         </p>
-        <p>
+        <p className="rulesParagraph">
           Samuel created the first Checkers program that was used by a computer.
           Gradually, these game programs were improved as computer speed and
           capacities increased. Today, computer programs rely more on database
@@ -65,13 +76,13 @@ class Rules extends React.Component {
           the family.
         </p>
         <h4>How to Play Standard American Checkers</h4>
-        <p>
+        <p className="rulesParagraph">
           While rules vary from country to country, these rules apply to
           American Checkers, a game that is played at every level by both
           children and adults.
         </p>
         <h6>Game Basics</h6>
-        <p>
+        <p className="rulesParagraph">
           Checkers is played by two players. Each player begins the game with 12
           colored discs. (Typically, one set of pieces is black and the other
           red.) Each player places his or her pieces on the 12 dark squares
@@ -79,11 +90,11 @@ class Rules extends React.Component {
           moves. The board consists of 64 squares, alternating between 32 dark
           and 32 light squares.
         </p>
-        <p>
+        <p className="rulesParagraph">
           It is positioned so that each player has a light square on the right
           side corner closest to him or her.
         </p>
-        <p>
+        <p className="rulesParagraph">
           A player wins the game when the opponent cannot make a move. In most
           cases, this is because all of the opponent's pieces have been
           captured, but it could also be because all of his pieces are blocked
@@ -130,6 +141,7 @@ class Rules extends React.Component {
             the opponent).
           </li>
         </ul>
+        </div>
       </div>
     );
   }

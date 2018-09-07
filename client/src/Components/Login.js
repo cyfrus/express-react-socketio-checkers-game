@@ -13,7 +13,8 @@ class Login extends Component {
     this.state = {
       redirectToReferrer: false,
       authenticated: false,
-      test: false
+      test: false,
+      error: ""
     };
   }
 
@@ -25,10 +26,13 @@ class Login extends Component {
 
     axios.post('/authenticate', data)
     .then(function (response) {
-      authenticated = response.data.auth;
-      this.setState({
-        authenticated : response.data.auth
-      })
+      console.log(response);
+        authenticated = response.data.auth;
+        
+        this.setState({
+          authenticated : response.data.auth,
+          error: response.data.auth ? "" : "Incorrect username or password!"
+        });
     }.bind(this))
     .catch(function (error) {
       console.log(error);
@@ -41,7 +45,8 @@ class Login extends Component {
     const name = target.name;
 
     this.setState({
-      [name]: value
+      [name]: value,
+      error: ""
     });
   }
 
@@ -62,8 +67,7 @@ class Login extends Component {
           <h3 className="loginTitle">Login</h3>
           <div>
             <div className="form-group">
-              {" "}
-              Username{" "}
+              Username
               <input
                 type="text"
                 className="username form-control"
@@ -72,8 +76,7 @@ class Login extends Component {
               />
             </div>
             <div className="form-group">
-              {" "}
-              Password{" "}
+              Password
               <input
                 type="password"
                 className="username form-control"
@@ -88,6 +91,7 @@ class Login extends Component {
               onClick={this.handleSubmit}
             />
           <a className="registrationLink" href="/registration">Registration</a>
+          <div className="loginError text-center">{this.state.error}</div>
           </div>
         </div>
       </div>

@@ -23,22 +23,20 @@ router.post('/register', function(req, res, next){
 }); 
 
 router.post('/authenticate', function(req, res, next){
+  var auth = {auth: false};
   if(req.body.username && req.body.password) {
     db.authenticate(req.body.username, req.body.password, function(result) {
       if(result) {
         bcrypt.compare(req.body.password, result.password, function(err, authed) {
-          var auth = {auth: false};
-              if(authed) {
-                auth.auth = true;
-                res.json(auth);
-              } else {
-                res.json(auth);
-              }
+            auth.auth = authed;
+            res.json(auth);
           });
+      } else {
+          res.json(auth);
       }
      });
   } else {
-    res.json({ autentication: "failed"});
+    res.json(auth);
   }
 });
 

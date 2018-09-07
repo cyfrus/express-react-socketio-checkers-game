@@ -11,6 +11,98 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
+// function checkJumps(positions, moves, removedPieces, boardState, turn){
+//   let newPositions = [],
+//       jumpFurther = false;
+
+//   if(!positions.length) {
+//       return {moves: moves, removedPieces: removedPieces};
+//   }
+//   positions.forEach( (position, index) => {
+//       if(!outOfBoard(position.row + 2, position.square + 2) && turn === "black" && boardState[position.row + 1][position.square + 1].pieceColor === "red" && !boardState[position.row + 2][position.square + 2].piece) {
+//           newPositions.push({row: position.row + 2, square: position.square + 2});
+//           moves.push({row: position.row + 2, square: position.square + 2});
+//           removedPieces.push({row: position.row + 1, square: position.square + 1});
+//           jumpFurther = true;
+//       }
+//       if(!outOfBoard(position.row + 2, position.square - 2) && turn === "black" && boardState[position.row + 1][position.square - 1].pieceColor === "red" && !boardState[position.row + 2][position.square - 2].piece) {
+//           newPositions.push({row: position.row + 2, square: position.square - 2});
+//           moves.push({row: position.row + 2, square: position.square - 2});
+//           removedPieces.push({row: position.row + 1, square: position.square - 1});
+//           jumpFurther = true;
+//       }
+//       if(!outOfBoard(position.row - 2, position.square - 2) && turn === "red" && boardState[position.row - 1][position.square - 1].pieceColor === "black" && !boardState[position.row - 2][position.square - 2].piece) {
+//           newPositions.push({row: position.row - 2, square: position.square - 2});
+//           moves.push({row: position.row - 2, square: position.square - 2});
+//           removedPieces.push({row: position.row - 1, square: position.square - 1});
+//           jumpFurther = true;
+//       }
+//       if(!outOfBoard(position.row - 2, position.square + 2) && turn === "red" && boardState[position.row - 1][position.square + 1].pieceColor === "black" && !boardState[position.row - 2][position.square + 2].piece) {
+//           newPositions.push({row: position.row - 2, square: position.square + 2});
+//           moves.push({row: position.row - 2, square: position.square + 2});
+//           removedPieces.push({row: position.row - 1, square: position.square + 1, });
+//           jumpFurther = true;
+//       }
+//       if(jumpFurther) {
+//           moves = moves.filter(location => {
+//               return location.row !== position.row && location.square !== position.square;
+//           });
+//           jumpFurther = false;
+//       }
+//   });
+  
+//   return checkJumps(newPositions, moves, removedPieces, boardState, turn);
+// }
+
+// function outOfBoard(row, square) {
+//   if(row > 7 || row < 0 || square < 0 || square > 7) {
+//       return true;
+//   } 
+//   return false;
+// }
+
+// function availableMoves(row, square, boardState, turn) {
+//   var movesObject = {
+//       moves: [],
+//       removedPieces: []
+//   };
+  
+//   if(boardState[row][square].pieceColor === "red" && turn === "red"){
+//        if(!outOfBoard(row - 1, square - 1) && !boardState[row - 1][square - 1].piece) {
+//           movesObject.moves.push({row: row - 1, square: square - 1});
+//        }
+//        if(!outOfBoard(row - 1, square + 1) && !boardState[row - 1][square + 1].piece){
+//           movesObject.moves.push({row: row - 1, square: square + 1});
+//        }
+//   } else if(boardState[row][square].pieceColor === "black" && turn === "black") {
+//       if(!outOfBoard(row + 1, square + 1) && !boardState[row + 1][square + 1].piece) {
+//           movesObject.moves.push({row: row + 1, square: square + 1});
+//        }
+//        if(!outOfBoard(row + 1, square - 1) && !boardState[row + 1][square - 1].piece){
+//           movesObject.moves.push({row: row + 1, square: square - 1});
+//        }
+//   }
+//   movesObject = checkJumps([{row: row, square: square}], movesObject.moves, [], boardState, turn);
+//   console.dir(movesObject);
+//   return movesObject;
+// }
+
+
+var players = [],
+    roomID,
+    games = [];
+
+function gameOver(boardState) {
+    var gameOver = true;
+    boardState.forEach((row, rowIndex) => {
+      row.forEach((square, squareIndex) => {
+          if(!availableMoves(rowIndex, squareIndex).moves.length) {
+            gameOver = false;
+          }
+      });
+    });
+    return gameOver;
+}
 
 function setTheGame() {
   var boardState = [8];
@@ -28,61 +120,91 @@ function setTheGame() {
              }
              
          }
-      }
+      }      
       return boardState;
-}
+    }
 
-var players = [];
-
-
-var roomID, turn = "red", opponent;
 io.on('connection', function (socket) {
-  var boardState = [];
+    var game = {
+        id: '',
+        turn: "red",
+        playerOne: socket,
+        playerTwo: undefined,
+        playerOneColor: "red",
+        playerTwoColor: "black",
+        status: "not started" 
+    }, opponent;
+
   socket.on('newGame', function (data) {
-    boardState = setTheGame();
     console.log("New game!");
+    game.status = "in progress";
   });
+
   socket.on('search', function (data) {
-      var player = {
-        socket: socket,
-        duration: data.duration,
-        opponent: data.opponent
-      };
-      players.push(player);
-      opponent = findOpponent(player);
-      console.log("Protivnik je " + opponent);
+      socket.duration = data.duration;
+      players.push(socket);
+      opponent = findOpponent(socket);
+      console.log("Protivnik je " + socket.opponent);
       if(opponent) {
         roomID = generateRoomName();
-        opponent.socket.join(roomID);
+        game.id = roomID;
+        game.playerOne = socket;
+        game.playerTwo = opponent;
+        opponent.join(roomID);
         socket.join(roomID);
         io.to(roomID).emit('foundGame', {game: roomID});
       }
   });
 
+  socket.on('setTheGame', function(data){
+    console.log("set The game data !");
+    console.log(data);
+  });
+
   socket.on('move', function(data){
-    turn = turn === "red" ? "black" : "red";
-    console.log("change turn " + turn + "room " + roomID);
-    io.to(roomID).emit('changeTurn', {turn: turn});
+    console.log("move!");
+    console.log();
+    if(true) {
+        console.log("njegov turn!");
+    } else {
+        console.log("nije njegov turn!");
+    }
     io.to(roomID).emit('updateBoardState', data);
   });
 
+  function playersTurn(game, socket) {
+    if((socket.id === game.playerOne.socket.id && game.turn === game.playerOneColor) || socket.id === game.playerTwo.socket.id && game.turn === game.playerTwoColor) {
+        return true;
+    }
+    return false;
+}
+  socket.on('changeTurn', function(data) {
+    socket.game.turn = data.turn;
+  });
   socket.on('stopSearch', function (data) {
       removePlayer(socket.id)
-      console.log(players); 
   });
 
   socket.on('accepted', function (){
       removePlayer(socket.id);
-      console.log(players);
+      //test test
+  });
+
+  socket.on('updateBoardState', function(data){
+    socket.boardState = data.boardState;
   });
 
   socket.on('disconnect', function () {
-      console.log("disconnected!");
+    removePlayer(socket.id);
+    console.log("client disconnected!");
   });
 
   socket.on('declined', function () {
     removePlayer(socket.id);
-    console.log(players);
+  });
+
+  socket.on('addTurn', function(data) {
+    socket.turn = data.turn;
   });
   console.log("client connected!");
 });
@@ -90,13 +212,13 @@ io.on('connection', function (socket) {
 
 function removePlayer(id) {
   players.pop(players.find(function(element){
-    return element.socket.id === id;
+    return element.id === id;
   }));
 }
 
 function findOpponent(player) {
    return players.find(function(element){
-      return player.socket.id !== element.socket.id && player.duration === element.duration;
+      return player.id !== element.id && player.duration === element.duration;
    });
 }
 

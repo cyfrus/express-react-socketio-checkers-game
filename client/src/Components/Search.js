@@ -11,7 +11,9 @@ class Search extends React.Component {
       opponent: "player",
       duration: "10",
       gameID: "",
-      gameStatus: null
+      gameStatus: null,
+      gameModeDescriptionPlayer: "Play against another player randomly found. Every game counts and win adds you 25 points to your MMR (Match making ratio), losing the match removes 25 points from your existing MMR. MMR can not go lower than 0.",
+      gameModeDescriptionAI: "Play against computer that randomly moves pieces. This game mode serves as practice to new players that maybe are not that familiar with checkers."
     };
     this.startSearch = this.startSearch.bind(this);
     this.selectOpponent = this.selectOpponent.bind(this);
@@ -78,13 +80,24 @@ class Search extends React.Component {
     socket.emit("accepted");
   }
   render() {
+    let description;
+      if(this.state.opponent === "player") {
+        description = 
+        <div className="descriptionDiv">
+          <p>{this.state.gameModeDescriptionPlayer}</p>
+        </div>
+      } else {
+        <div className="descriptionDiv">
+          <p>{this.state.gameModeDescriptionAI}</p>
+        </div>  
+      }
     if (this.state.gameStatus === "ready") {
       return <Redirect to={"/game/" + this.state.gameID} />;
     }
     if (!this.state.searching) {
       return (
         <div className="row">
-          <div className="col-md-5">
+          <div className="col-md-6 offset-md-3">
             <h4 className="searchTitle">Search for game</h4>
             <div>
               <div className="form-group">
@@ -135,7 +148,9 @@ class Search extends React.Component {
             >
               Search
             </button>
+            {description}
           </div>
+         
         </div>
       );
     } else if (this.state.gameID !== "") {
@@ -153,14 +168,15 @@ class Search extends React.Component {
     } else {
       return (
         <div className="row">
-          <div className="col-md-5">
-            <h4>Searching for game</h4>
+          <div className="col-md-6 offset-md-3">
+            <h4 className="searchTitle">Searching for game</h4>
             <button
-              className="btn btn-danger form-control"
+              className="btn btn-danger form-control searchbutton"
               onClick={this.stopSearch}
             >
               Stop searching
             </button>
+            {description}
           </div>
         </div>
       );
