@@ -29,7 +29,7 @@ const Navigation = () => (
       <PrivateRoute exact path="/edit" component={EditProfile} />
       <PublicRoute path="/registration" component={Registration} />
       <PrivateRoute path="/game/:gameId" component={Game} />
-      <div><AuthButton /></div>
+      <div className="signOut"><AuthButton /></div>
     </div>
   </Router>
 );
@@ -49,7 +49,7 @@ const AuthButton = withRouter(
         </button>
       </p>
     ) : (
-      <p>You are not logged in.</p>
+      <div>You are not logged in.</div>
     )
 )
 

@@ -9,8 +9,31 @@ class EditProfile extends React.Component {
         this.state = {
             username: sessionStorage.getItem('username'),
             email: sessionStorage.getItem('email'),
-            about: sessionStorage.getItem('about')
+            about: sessionStorage.getItem('about'),
+            password: ""
         }
+        this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    handleSubmit() {
+        var data = {
+            username: this.state.username,
+            email: this.state.email,
+            about: this.state.about,
+            password: this.state.password
+        }   
+
+        axios.post('/edit', data)
+        .then(function (response) {
+        console.log(response);
+            this.setState({
+            authenticated : response.data.auth,
+            error: response.data.auth ? "" : "Incorrect username or password!"
+            });
+        }.bind(this))
+        .catch(function (error) {
+        console.log(error);
+        });
     }
 
     render() {
