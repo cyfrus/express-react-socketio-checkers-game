@@ -72,7 +72,7 @@ var create_match = function(player_id, roomID, turn_time, callback) {
       console.log(error);
       callback(false);
     } else {
-      connection.query('INSERT INTO games_users SET ?', {game_ID: results.insertId, player1_ID: player_id}, function (error, results, fields) {
+      connection.query('INSERT INTO games_users SET ?', {game_ID: results.insertId, player1_ID: player_id, status: 2}, function (error, results, fields) {
         if (error) {
           console.log(error);
           callback(false);

@@ -155,8 +155,9 @@ io.on('connection', function (socket) {
   socket.on('joinGame', function(data) {
     db.joinMatch(data.user_id, data.match_id, (joinedGame, match_id) => {
       if(joinedGame) {
+        console.log("joined game + match ID: " + match_id);
         socket.join(match_id);
-        io.to(match_id).emit('startGame');
+        io.to(match_id).emit('startGame', match_id);
       }
     });
   });

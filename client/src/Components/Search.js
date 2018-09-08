@@ -83,9 +83,11 @@ class Search extends React.Component {
       
     });
   
-    socket.on('startGame', (match_id) => {
+    socket.on('startGame', (data) => {
+      console.log(data);
       this.setState({
-        gameID: match_id
+        gameID: data,
+        gameStatus: "ready"
       });
     });
 
@@ -269,19 +271,8 @@ class Search extends React.Component {
          </div>
         </div>
       );
-    } else if (this.state.gameID !== "") {
-      return (
-        <div className="text-center">
-          <h4 className="">Found the opponent</h4>
-          <button className="accept-btn" onClick={this.acceptGame}>
-            Accept
-          </button>
-          <button className="decline-btn" onClick={this.declineGame}>
-            Decline
-          </button>
-        </div>
-      );
-    } else {
+    } 
+    else {
       return (
         <div className="row">
           <div className="col-md-6">
