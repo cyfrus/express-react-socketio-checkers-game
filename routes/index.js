@@ -22,6 +22,12 @@ router.post('/register', function(req, res, next){
   });
 }); 
 
+router.get('/getGames', function(req, res, next) {
+  db.getAllGames(result => {
+    res.json(result);
+  });
+});
+
 router.post('/authenticate', function(req, res, next){
   var auth = {
     auth: false,
@@ -51,5 +57,7 @@ router.get('/getNumOfPlayers', function(req, res, next){
     });
   });
 });
+
+router.post('/')
 
 module.exports = router;

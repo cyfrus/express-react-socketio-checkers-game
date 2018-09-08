@@ -32,6 +32,7 @@ class Login extends Component {
         sessionStorage.setItem('MMR', response.data.user.MMR);
         sessionStorage.setItem('email', response.data.user.email);
         sessionStorage.setItem('authenticated', "yes");
+        sessionStorage.setItem('id', response.data.user.id);
       }
         this.setState({
           authenticated : response.data.auth,

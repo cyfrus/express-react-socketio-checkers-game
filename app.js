@@ -10,6 +10,8 @@ const crypto = require('crypto');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+var db = require('./db/connection');
+
 
 // function checkJumps(positions, moves, removedPieces, boardState, turn){
 //   let newPositions = [],
@@ -122,24 +124,42 @@ function setTheGame() {
          }
       }      
       return boardState;
-    }
+}
+
+function createGame(player_id, roomID, turn_time, callback) {
+  db.create_match(player_id, roomID, turn_time, (result) => {
+      if(result) {
+        callback(true, roomID);
+      }
+      else {
+        callback(false, roomID);
+      }
+  });
+}
 
 io.on('connection', function (socket) {
-    var game = {
-        id: '',
-        turn: "red",
-        playerOne: socket,
-        playerTwo: undefined,
-        playerOneColor: "red",
-        playerTwoColor: "black",
-        status: "not started" 
-    }, opponent;
 
-  socket.on('newGame', function (data) {
-    console.log("New game!");
-    game.status = "in progress";
+  socket.on('createGame', function(data) {
+    console.log("create game!");
+    createGame(data.id, generateRoomName(), data.turn_time, (gameCreated, roomID) => {
+      socket.emit('test', 'test');
+        if(gameCreated) {
+          db.getAllGames((result) => {
+            console.log(result[0].id);
+            socket.join(roomID);
+            io.of('/').emit('updateGameList', result);
+          });
+        }
+    });
   });
-
+  socket.on('joinGame', function(data) {
+    db.joinMatch(data.user_id, data.match_id, (joinedGame, match_id) => {
+      if(joinedGame) {
+        socket.join(match_id);
+        io.to(match_id).emit('startGame');
+      }
+    });
+  });
   socket.on('search', function (data) {
       socket.duration = data.duration;
       players.push(socket);
@@ -154,11 +174,6 @@ io.on('connection', function (socket) {
         socket.join(roomID);
         io.to(roomID).emit('foundGame', {game: roomID});
       }
-  });
-
-  socket.on('setTheGame', function(data){
-    console.log("set The game data !");
-    console.log(data);
   });
 
   socket.on('move', function(data){

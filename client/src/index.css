@@ -342,3 +342,14 @@ button:focus
   background-color: white;
   padding:10px 20px;
 }
+
+.gameListItem {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.nextList, .previousList {
+  border: 1px solid lightgray;
+  margin: 20px 20px 20px 0; 
+}

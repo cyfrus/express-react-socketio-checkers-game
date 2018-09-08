@@ -43,19 +43,58 @@ var authenticate = function(username, password, callback) {
 }
 
 var getPlayers = function(callback) {
-  connection.query("SELECT * FROM USERS", function(error, results, fields) {
+  connection.query("SELECT * FROM users", function(error, results, fields) {
     if (error) throw error;
     callback(results.length);
   });
 }
 
-var updatePlayer = function(username, email, newpassword, about, callback) {
-    connection.query('UPDATE users SET username = ?, password = ?, email = ?, about = ? WHERE username = ?', [username, newpassword, email, about,  username], function (error, results, fields) {
-      if (error) throw error;
-
-    });
+var joinMatch = function(player2_id, match_id, callback) {
+      connection.query('UPDATE games_users SET player2_ID = ? WHERE game_ID = ?', [player2_id, match_id], function (error, results, fields) {
+        if (error) {
+          console.log(error);
+          callback(false);
+        } else {
+          connection.query("SELECT * FROM games WHERE id = ? ",[match_id], function(error, results, fields) {
+            if(error) {
+              callback(false);
+            } else {
+              callback(true, results[0].roomID);
+            }
+          });
+        }
+      });
 }
 
+var create_match = function(player_id, roomID, turn_time, callback) {
+  connection.query('INSERT INTO games SET ?', {roomID, turn_time: parseInt(turn_time), messages: "", moves: ""}, function (error, results, fields) {
+    if (error) {
+      console.log(error);
+      callback(false);
+    } else {
+      connection.query('INSERT INTO games_users SET ?', {game_ID: results.insertId, player1_ID: player_id}, function (error, results, fields) {
+        if (error) {
+          console.log(error);
+          callback(false);
+        } else {
+          callback(true);
+        }
+      });
+    }
+  });
+}
+
+var getAllGames = function(callback) {
+  console.log("get all games!");
+  connection.query('SELECT * from games INNER JOIN games_users ON games_users.game_ID = games.id INNER JOIN users ON games_users.player1_ID = users.id', function(error, results, fields){
+    if (error) throw error;
+    callback(results);
+  });
+}
+
+module.exports.joinMatch = joinMatch;
+module.exports.getAllGames = getAllGames;
+module.exports.create_match = create_match;
 module.exports.insert_user = insert_user;
 module.exports.authenticate = authenticate;
 module.exports.getPlayers = getPlayers;
