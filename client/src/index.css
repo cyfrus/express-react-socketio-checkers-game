@@ -353,3 +353,8 @@ button:focus
   border: 1px solid lightgray;
   margin: 20px 20px 20px 0; 
 }
+
+.showGamesBtn {
+  margin-top: 20px;
+  border: 1px solid lightgray;
+}

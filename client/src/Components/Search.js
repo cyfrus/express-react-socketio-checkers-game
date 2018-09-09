@@ -6,25 +6,6 @@ import axios from "axios";
 const socket = io.connect("http://localhost:3001");
 
 
-function initialGameList () {
-  axios.get('/getGames')
-  .then(function (response) {
-    // handle success
-    console.log(response.data);
-    if(response.data.length){
-      return response.data;
-    }
-    return [];
-  })
-  .catch(function (error) {
-    // handle error
-    console.log(error);
-  })
-  .then(function () {
-    // always executed
-});
-}
-
 class Search extends React.Component {
   constructor(props) {
     super(props);
@@ -37,26 +18,30 @@ class Search extends React.Component {
       gameModeDescriptionAI: "Play against computer that randomly moves pieces. This game mode serves as practice to new players that maybe are not that familiar with checkers.",
       gameList: [],
       displayList: [],
+      searching: false,
+      showGameList: false,
       sliceIndex: 10,
     };
     this.startSearch = this.startSearch.bind(this);
     this.selectOpponent = this.selectOpponent.bind(this);
     this.changeDuration = this.changeDuration.bind(this);
-    this.stopSearch = this.stopSearch.bind(this);
+    this.deleteGameLobby = this.deleteGameLobby.bind(this);
     this.acceptGame = this.acceptGame.bind(this);
-    this.declineGame = this.declineGame.bind(this);
     this.nextList = this.nextList.bind(this);
     this.previousList = this.previousList.bind(this);
     this.joinGame = this.joinGame.bind(this);
+    this.showGameList = this.showGameList.bind(this);
   }
-
+  
   componentDidMount() {
     axios.get('/getGames')
     .then(function (response) {
       // handle success
       console.log(response.data);
       this.setState({
-        gameList: response.data
+        displayList: this.filterGameList(response.data).slice(0, 10),
+        gameList: response.data,
+        showGameList: true
       })
     }.bind(this))
     .catch(function (error) {
@@ -65,18 +50,17 @@ class Search extends React.Component {
     })
     .then(function () {
       // always executed
-    
     });
-    socket.on("foundGame", (data) => {
-        this.setState({
-          gameID: data.game
-        });
-      });
-
+ 
     socket.on('updateGameList', (data) => {
+      let filteredGames = data.filter((game) => {
+          return game.status === "not started" && game.player1_ID !== parseInt(sessionStorage.getItem('id'));
+      });
+      console.log(data);
+      console.log(filteredGames);
       this.setState({
-        gameList: data,
-        displayList: data.slice(0, this.state.sliceIndex)
+        gameList: filteredGames,
+        displayList: this.filterGameList(data).slice(0, 10)
       }, () => {
         console.log(this.state.gameList);
       });
@@ -92,10 +76,18 @@ class Search extends React.Component {
     });
 
   }
+
+  filterGameList(gameList) {
+    let filteredGames = gameList.filter(game => {
+      return game.status === "not started" && game.player1_ID !== parseInt(sessionStorage.getItem('id'));
+    });
+    return filteredGames;
+  }
+
   previousList(event) {
     let sliceIndex = this.state.sliceIndex,
         displayList = this.state.displayList.slice(),
-        games = this.state.gameList;
+        games = this.filterGameList(this.state.gameList);
         
 
     if(sliceIndex < 10) {
@@ -111,6 +103,27 @@ class Search extends React.Component {
       displayList
     });
   }
+
+  showGameList() {
+    axios.get('/getGames')
+    .then(function (response) {
+      // handle success
+      console.log(response.data);
+      this.setState({
+        displayList: this.filterGameList(response.data).slice(0, 10),
+        gameList: response.data,
+        showGameList: true
+      })
+    }.bind(this))
+    .catch(function (error) {
+      // handle error
+      console.log(error);
+    })
+    .then(function () {
+      // always executed
+    });
+  }
+  
   joinGame(match_id) {
     console.log("join game attempt");
     socket.emit('joinGame', { user_id: sessionStorage.getItem('id'), match_id: match_id });
@@ -118,7 +131,7 @@ class Search extends React.Component {
   nextList(event) {
     let sliceIndex = this.state.sliceIndex,
     displayList = this.state.displayList.slice(),
-    games = this.state.gameList;
+    games = this.filterGameList(this.state.gameList);
     
     if(sliceIndex + 10 > games.length) {
       displayList = games.slice(sliceIndex, games.length);
@@ -144,21 +157,13 @@ class Search extends React.Component {
     });
   }
 
-  declineGame() {
+  deleteGameLobby(event) {
+    console.log("Deleting lobby");
     this.setState({
       searching: false,
-      gameID: ""
     });
-    socket.emit("declined");
-    console.log("declined");
-  }
 
-  stopSearch(event) {
-    console.log("stop searching!");
-    this.setState({
-      searching: false
-    });
-    socket.emit("stopSearch", {});
+    socket.emit("deleteLobby");
   }
 
   startSearch(event) {
@@ -182,16 +187,17 @@ class Search extends React.Component {
     socket.emit("accepted");
   }
   render() {
-    let gameList = this.state.displayList.map((game, index) => {
-      return ( 
-      <li key={game.game_ID} className="list-group-item gameListItem">
-        <div>{game.game_ID}</div>
-        <div>{game.username}</div>
-        <div>{game.MMR}</div>
-        <div><button className="btn btn-light" onClick={this.joinGame.bind(this, game.game_ID)}>Join</button></div>
-        <div>Turn: {game.turn_time}</div> 
-      </li>);
-    });
+      let gameList = this.state.displayList.map((game, index) => {
+          return ( 
+          <li key={game.game_ID} className="list-group-item gameListItem">
+            <div>{game.game_ID}</div>
+            <div>{game.username}</div>
+            <div>{game.MMR}</div>
+            <div><button className="btn btn-light" onClick={this.joinGame.bind(this, game.game_ID)}>Join</button></div>
+            <div>Turn: {game.turn_time}</div> 
+          </li>);
+        });   
+   
     let description;
       if(this.state.opponent === "player") {
         description = 
@@ -255,19 +261,23 @@ class Search extends React.Component {
                 <option value="120">120 Seconds</option>
               </select>
             </div>
+            <div className="form-group"><button className="showGamesBtn btn btn-light" onClick={this.showGameList}> Show Game List</button></div>
             <button
               className="btn btn-success form-control searchbutton"
               onClick={this.startSearch}
             >
-              Create 
+              Create Game Lobby
             </button>
             {description}
           </div>
-         <div className="col-md-4 offset-1">
+         <div className="col-md-6">
          <h3>Games</h3>
+          {this.state.showGameList}
           <ul className="list-group">
           {gameList}
           </ul>
+          <button className="btn btn-light previousList" onClick={this.previousList}>previous</button>
+          <button className="btn btn-light nextList" onClick={this.nextList}>next</button>
          </div>
         </div>
       );
@@ -275,24 +285,16 @@ class Search extends React.Component {
     else {
       return (
         <div className="row">
-          <div className="col-md-6">
-            <h4 className="searchTitle">Searching for game</h4>
+          <div className="col-md-6 offset-md-3">
+            <h4 className="searchTitle">Waiting for player to connect</h4>
             <button
               className="btn btn-danger form-control searchbutton"
-              onClick={this.stopSearch}
+              onClick={this.deleteGameLobby}
             >
-              Stop searching
+              Exit Game Lobby
             </button>
             {description}
           </div>
-          <div className="col-md-6 col-lg-6">
-          <h3>Games</h3>
-            <ul className="list-group">
-            {gameList}
-          </ul>
-          <button className="btn btn-light previousList" onClick={this.previousList}>previous</button>
-          <button className="btn btn-light nextList" onClick={this.nextList}>next</button>
-         </div>
         </div>
       );
     }

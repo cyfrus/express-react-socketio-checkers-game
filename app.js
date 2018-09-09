@@ -89,11 +89,6 @@ var db = require('./db/connection');
 //   return movesObject;
 // }
 
-
-var players = [],
-    roomID,
-    games = [];
-
 function gameOver(boardState) {
     var gameOver = true;
     boardState.forEach((row, rowIndex) => {
@@ -138,14 +133,12 @@ function createGame(player_id, roomID, turn_time, callback) {
 }
 
 io.on('connection', function (socket) {
-
   socket.on('createGame', function(data) {
+    socket.player_id = data.id;
     console.log("create game!");
     createGame(data.id, generateRoomName(), data.turn_time, (gameCreated, roomID) => {
-      socket.emit('test', 'test');
         if(gameCreated) {
           db.getAllGames((result) => {
-            console.log(result[0].id);
             socket.join(roomID);
             io.of('/').emit('updateGameList', result);
           });
@@ -161,21 +154,21 @@ io.on('connection', function (socket) {
       }
     });
   });
-  socket.on('search', function (data) {
-      socket.duration = data.duration;
-      players.push(socket);
-      opponent = findOpponent(socket);
-      console.log("Protivnik je " + socket.opponent);
-      if(opponent) {
-        roomID = generateRoomName();
-        game.id = roomID;
-        game.playerOne = socket;
-        game.playerTwo = opponent;
-        opponent.join(roomID);
-        socket.join(roomID);
-        io.to(roomID).emit('foundGame', {game: roomID});
-      }
-  });
+  // socket.on('search', function (data) {
+  //     socket.duration = data.duration;
+  //     players.push(socket);
+  //     opponent = findOpponent(socket);
+  //     console.log("Protivnik je " + socket.opponent);
+  //     if(opponent) {
+  //       roomID = generateRoomName();
+  //       game.id = roomID;
+  //       game.playerOne = socket;
+  //       game.playerTwo = opponent;
+  //       opponent.join(roomID);
+  //       socket.join(roomID);
+  //       io.to(roomID).emit('foundGame', {game: roomID});
+  //     }
+  // });
 
   socket.on('move', function(data){
     console.log("move!");
@@ -197,46 +190,43 @@ io.on('connection', function (socket) {
   socket.on('changeTurn', function(data) {
     socket.game.turn = data.turn;
   });
-  socket.on('stopSearch', function (data) {
-      removePlayer(socket.id)
-  });
-
-  socket.on('accepted', function (){
-      removePlayer(socket.id);
-      //test test
-  });
 
   socket.on('updateBoardState', function(data){
     socket.boardState = data.boardState;
   });
 
+  socket.on('deleteLobby', function() {
+    if(socket.player_id) {
+      db.deleteRoom(socket.player_id, (deletedRoom) => {
+        if(deletedRoom) {
+          db.getAllGames((result) => {
+            socket.broadcast.emit('updateGameList', result);
+          });
+        } else {
+          console.log("Nije uspjesno brisanje");
+        }
+      });
+    }
+  });
+
   socket.on('disconnect', function () {
-    removePlayer(socket.id);
-    console.log("client disconnected!");
+    if(socket.player_id) {
+      db.deleteRoom(socket.player_id, (deletedRoom) => {
+        if(deletedRoom) {
+          db.getAllGames((result) => {
+            socket.broadcast.emit('updateGameList', result);
+          });
+          console.log(deletedRoom);
+        } else {
+          console.log("Nije uspjesno brisanje");
+        }
+      });
+    }
+    console.log("player disconnected!")
   });
 
-  socket.on('declined', function () {
-    removePlayer(socket.id);
-  });
-
-  socket.on('addTurn', function(data) {
-    socket.turn = data.turn;
-  });
-  console.log("client connected!");
+  console.log("player connected!");
 });
-
-
-function removePlayer(id) {
-  players.pop(players.find(function(element){
-    return element.id === id;
-  }));
-}
-
-function findOpponent(player) {
-   return players.find(function(element){
-      return player.id !== element.id && player.duration === element.duration;
-   });
-}
 
 function generateRoomName() {
   var roomId = crypto.randomBytes(20).toString('hex');
