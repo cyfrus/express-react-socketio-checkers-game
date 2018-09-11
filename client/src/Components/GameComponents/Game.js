@@ -108,11 +108,20 @@ class Game extends React.Component {
           .catch(function (error) {
             console.log(error);
           });
-        socket.on('updateBoardState', (boardState) => {
+        socket.on('updateBoardState', (data) => {
             this.setState({
-                boardState: boardState
+                player1: data.PLAYER1,
+                player2: data.PLAYER2,
+                turn: data.TURN,
+                myTurn : this.checkIfmyTurn(data),
+                color: this.getColor(data),
+                match_id: data.MATCH_ID,
+                red: data.RED,
+                black: data.BLACK,
+                roomID: data.ROOM_ID,
+                boardState: data.MOVES
             });
-            console.log(boardState);
+            console.log(data);
         });
         socket.on('checkMoveResponse', (data) => {
             console.log("checkMoveResponse!");
@@ -126,12 +135,7 @@ class Game extends React.Component {
         socket.on('reconnected', (data) => {
             console.log(data);
         });
-        socket.on("changeTurn", (data) => {
-            console.log(data);
-          this.setState({
-              turn: data.turn
-          });
-        });
+        
     }
     
 

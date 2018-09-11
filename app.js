@@ -56,6 +56,33 @@ var db = require('./db/connection');
 //   return checkJumps(newPositions, moves, removedPieces, boardState, turn);
 // }
 
+function jumps(row, square, move, boardState, turn, ) {
+  let moves = [], deleted = [], result;
+  if(!outOfBoard(row + 2, square + 2) && turn === "black" && boardState[row + 1][square + 1].pieceColor === "red" && !boardState[row + 2][square + 2].piece) {
+    moves.push({row: row + 2, square: square + 2});
+    deleted.push({row: row + 1, square: square + 1});
+  }
+  if(!outOfBoard(row + 2, square - 2) && turn === "black" && boardState[row + 1][square - 1].pieceColor === "red" && !boardState[row + 2][square - 2].piece) {
+      moves.push({row: row + 2, square: square - 2});
+      deleted.push({row: row + 1, square: square -1});
+    }
+    if(!outOfBoard(row - 2, square - 2) && turn === "red" && boardState[row - 1][square - 1].pieceColor === "black" && !boardState[row - 2][square - 2].piece) {
+      moves.push({row: row - 2, square: square - 2});
+      deleted.push({row: row - 1, square: square - 1});
+    }
+    if(!outOfBoard(row - 2, square + 2) && turn === "red" && boardState[row - 1][square + 1].pieceColor === "black" && !boardState[row - 2][square + 2].piece) {
+      moves.push({row: row - 2, square: square + 2});
+      deleted.push({row: row - 1, square: square + 1});
+    }
+
+    moves.forEach((element, index) => {
+        if(element.row === move.row && element.square === move.square) {
+          result = deleted[index];
+        }
+    });
+  return result;
+}
+
 function outOfBoard(row, square) {
   if(row > 7 || row < 0 || square < 0 || square > 7) {
       return true;
@@ -81,6 +108,7 @@ function availableMoves(row, square, move, boardState, turn) {
           moves.push({row: row + 1, square: square - 1});
        }
   }
+
   if(moves.find(element => {
       return element.row === move.row &&  element.square === move.square;
   })) {
@@ -154,25 +182,29 @@ io.on('connection', function (socket) {
   socket.on('checkMove', function(data){
     db.getGame(data.user_id, (result) => {
         let moves = result[result.length-1].MOVES,
-            boardState = [];
+            boardState = [], canJump;
             console.log(data);
         if(!moves) {
           boardState = setTheGame();
         } else {
           boardState = transformTextToMoves(moves);
         }
+        canJump = jumps(data.from.row, data.from.square, data.move, boardState, data.color);
+        console.log("Can jump je ");
+        console.log(canJump);
         if(availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
             db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), inserted => {
               db.getGame(data.user_id, (res) => {
-                io.in(data.roomID).emit('updateBoardState', transformTextToMoves(res[res.length-1].MOVES));
+                let updatedState = res[res.length-1];
+                console.log(res[res.length-1]);
+                updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
+                
+                io.in(data.roomID).emit('updateBoardState', updatedState);
               });
             });
-          }
-          // boardState = transformTextToMoves(moves);
-          // if(availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
-          //   db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color));
-          //   io.in(data.roomID).emit('updateBoardState', transformTextToMoves(moves));
-          // }
+        } else if(canJump) {
+            console.log(jumpToText(canJump));
+        }
     });
     io.in(data.roomID).emit('checkMoveResponse');
   });
@@ -274,6 +306,12 @@ var transformTextToMoves = function(moves) {
     boardState[fromRow][fromSquare].pieceColor = "";
   }
   return boardState;
+}
+
+var jumpToText = function(deleted) {
+  let move = "";
+  move = "DELET" + deleted.row.toString() + deleted.square.toString();
+  return move;
 }
 
 var transformMoveToText = function(from, to, color) {

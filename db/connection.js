@@ -123,13 +123,19 @@ var deleteRoom = function(player_id, callback) {
 }
 
 var insertMove = function(match_id, moves, res) {
-  connection.query('UPDATE games SET moves = ? WHERE id = ?', [moves, match_id], function (error, results, fields) {
-    if(!error) {
-      res(true);
-    } else {
-      res(false);
-    }
+  connection.query('SELECT * from games WHERE id = ?', [match_id], function (error, results, fields) {
+    let turn = results[0].turn === "player1" ? 2 : 1;
+    console.log("turn je ");
+    console.log(results[0].turn);
+    connection.query('UPDATE games SET moves = ?, turn = ? WHERE id = ?', [moves, turn, match_id], function (error, results, fields) {
+      if(!error) {
+        res(true);
+      } else {
+        res(false);
+      }
+    });
   });
+  
 }
 
 module.exports.insertMove = insertMove;
