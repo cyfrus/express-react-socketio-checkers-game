@@ -2,6 +2,8 @@ import React from "react";
 import Board from "./Board";
 import io from "socket.io-client";
 import {Socket} from "../Search";
+import axios from "axios";
+import {Redirect} from "react-router-dom";
 
 var socket  = Socket;
 
@@ -30,180 +32,176 @@ class Game extends React.Component {
         super(props);
         this.state = {
             boardState: setTheGame(),
-            turn: "red",
+            turn: "",
             redPieces: 12,
             whitePieces: 12,
             selected: false,
             selectedLocation: {row: false, square: false},
             availableMoves: [],
             removedPieces: [],
-            gameOver: false
+            gameOver: false,
+            player1: '',
+            player2: '',
+            red: '',
+            black: '',
+            myTurn: false,
+            color: "",
+            match_id: null,
+            roomID: '',
+            redirect: false
         }
         this.handleClick = this.handleClick.bind(this);
-        this.checkJumps = this.checkJumps.bind(this);
-        this.movePiece = this.movePiece.bind(this);
-        socket.emit('newGame', {});
     }
  
-    componentDidMount() {
-        socket.on("gameOver", (data) => {
-            this.setState({
-                gameOver: true
-            });
-        });
+    checkIfmyTurn(gameInfo) { 
+        if((gameInfo.TURN === "player1" && gameInfo.PLAYER1ID === parseInt(sessionStorage.getItem('id'))) || (gameInfo.TURN === "player2" && gameInfo.PLAYER2ID === parseInt(sessionStorage.getItem('id')))) {
+            return true;
+        }
+        return false;
+    }
 
+    getColor(gameInfo) {
+        if (parseInt(sessionStorage.getItem('id'), 10) === gameInfo.PLAYER1ID && gameInfo.BLACK === "player1") {
+            return "black";
+        } else if (parseInt(sessionStorage.getItem('id'), 10) === gameInfo.PLAYER1ID && gameInfo.RED === "player1") {
+            return "red";
+        } else if (parseInt(sessionStorage.getItem('id'), 10) === gameInfo.PLAYER2ID && gameInfo.RED === "player2") {
+            return "red";
+        } else if(parseInt(sessionStorage.getItem('id'), 10) === gameInfo.PLAYER2ID && gameInfo.BLACK === "player2") {
+            return "black";
+        }
+
+    }
+
+    componentDidMount() {
+        axios.post('/getMatchData', {
+            user_id: parseInt(sessionStorage.getItem('id'))
+          })
+          .then(function (response) {
+            if(response.data === "") {
+                console.log(response);
+                this.setState({
+                    redirect: true
+                },() => {
+                    console.log( "redirect je " + this.state.redirect);
+                });
+            } else {
+                console.log(response);
+                this.setState({
+                    player1: response.data.PLAYER1,
+                    player2: response.data.PLAYER2,
+                    turn: response.data.TURN,
+                    myTurn : this.checkIfmyTurn(response.data),
+                    color: this.getColor(response.data),
+                    match_id: response.data.MATCH_ID,
+                    red: response.data.RED,
+                    black: response.data.BLACK,
+                    roomID: response.data.ROOM_ID,
+                    boardState: response.data.MOVES
+                
+                }, () => {
+                    socket.emit('checkIfUserIsInTheRoom', this.state.roomID); 
+                    
+                });
+            } 
+          }.bind(this))
+          .catch(function (error) {
+            console.log(error);
+          });
+        socket.on('updateBoardState', (boardState) => {
+            this.setState({
+                boardState: boardState
+            });
+            console.log(boardState);
+        });
+        socket.on('checkMoveResponse', (data) => {
+            console.log("checkMoveResponse!");
+        });
+        socket.on('hey', (data) => {
+            console.log(data);
+        });
+        socket.on('gameData', (data) => {
+            console.log(data);
+        });
+        socket.on('reconnected', (data) => {
+            console.log(data);
+        });
         socket.on("changeTurn", (data) => {
             console.log(data);
           this.setState({
               turn: data.turn
           });
         });
-        socket.on('updateBoardState', (data) => {
-            this.setState({
-                boardState: data.boardState,
-                selected: false
-            })
-        });
     }
     
-    availableMoves(row, square) {
-        var movesObject = {
-            moves: [],
-            removedPieces: []
-        };
-        
-        if(this.state.boardState[row][square].pieceColor === "red" && this.state.turn === "red"){
-             if(!this.outOfBoard(row - 1, square - 1) && !this.state.boardState[row - 1][square - 1].piece) {
-                movesObject.moves.push({row: row - 1, square: square - 1});
-             }
-             if(!this.outOfBoard(row - 1, square + 1) && !this.state.boardState[row - 1][square + 1].piece){
-                movesObject.moves.push({row: row - 1, square: square + 1});
-             }
-        } else if(this.state.boardState[row][square].pieceColor === "black" && this.state.turn === "black") {
-            if(!this.outOfBoard(row + 1, square + 1) && !this.state.boardState[row + 1][square + 1].piece) {
-                movesObject.moves.push({row: row + 1, square: square + 1});
-             }
-             if(!this.outOfBoard(row + 1, square - 1) && !this.state.boardState[row + 1][square - 1].piece){
-                movesObject.moves.push({row: row + 1, square: square - 1});
-             }
-        }
-        movesObject = this.checkJumps([{row: row, square: square}], movesObject.moves, []);
-        console.dir(movesObject);
-        return movesObject;
-    }
-
-    checkJumps(positions, moves, removedPieces){
-        let boardState = this.state.boardState.slice(),
-            newPositions = [],
-            jumpFurther = false;
-
-        if(!positions.length) {
-            return {moves: moves, removedPieces: removedPieces};
-        }
-        positions.forEach( (position, index) => {
-            if(!this.outOfBoard(position.row + 2, position.square + 2) && this.state.turn === "black" && boardState[position.row + 1][position.square + 1].pieceColor === "red" && !boardState[position.row + 2][position.square + 2].piece) {
-                newPositions.push({row: position.row + 2, square: position.square + 2});
-                moves.push({row: position.row + 2, square: position.square + 2});
-                removedPieces.push({row: position.row + 1, square: position.square + 1});
-                jumpFurther = true;
-            }
-            if(!this.outOfBoard(position.row + 2, position.square - 2) && this.state.turn === "black" && boardState[position.row + 1][position.square - 1].pieceColor === "red" && !boardState[position.row + 2][position.square - 2].piece) {
-                newPositions.push({row: position.row + 2, square: position.square - 2});
-                moves.push({row: position.row + 2, square: position.square - 2});
-                removedPieces.push({row: position.row + 1, square: position.square - 1});
-                jumpFurther = true;
-            }
-            if(!this.outOfBoard(position.row - 2, position.square - 2) && this.state.turn === "red" && boardState[position.row - 1][position.square - 1].pieceColor === "black" && !boardState[position.row - 2][position.square - 2].piece) {
-                newPositions.push({row: position.row - 2, square: position.square - 2});
-                moves.push({row: position.row - 2, square: position.square - 2});
-                removedPieces.push({row: position.row - 1, square: position.square - 1});
-                jumpFurther = true;
-            }
-            if(!this.outOfBoard(position.row - 2, position.square + 2) && this.state.turn === "red" && boardState[position.row - 1][position.square + 1].pieceColor === "black" && !boardState[position.row - 2][position.square + 2].piece) {
-                newPositions.push({row: position.row - 2, square: position.square + 2});
-                moves.push({row: position.row - 2, square: position.square + 2});
-                removedPieces.push({row: position.row - 1, square: position.square + 1, });
-                jumpFurther = true;
-            }
-            if(jumpFurther) {
-                moves = moves.filter(location => {
-                    return location.row !== position.row && location.square !== position.square;
-                });
-                jumpFurther = false;
-            }
-        });
-        
-        return this.checkJumps(newPositions, moves, removedPieces);
-    }
-
-    outOfBoard(row, square) {
-        if(row > 7 || row < 0 || square < 0 || square > 7) {
-            return true;
-        } 
-        return false;
-    }
-
- 
 
     handleClick(row, square) {
-        if(!this.state.gameOver) {
-            var boardState = this.state.boardState.slice();
-            var selectedLocation, selected, movesObject = { moves: [], removedPieces: []};
-            if(this.state.selected) {
-                boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].selected = false;
-                if(this.movePiece(row, square)) {
-                    this.state.removedPieces.forEach((location) => {
-                        boardState[location.row][location.square].piece = false;
-                        boardState[location.row][location.square].pieceColor = "";
-                    });
-                    boardState = this.movePiece(row, square);
-                    socket.emit('move', {boardState: boardState, row: row, square: square});
-                }
-                selectedLocation = {row: false, square: false};
-                selected = false;
-            } else if(boardState[row][square].piece) {
-                selectedLocation = {row: row, square: square};
+       
+        if(!this.state.gameOver && this.state.myTurn) {
+            let boardState = this.state.boardState.slice();
+            if(boardState[row][square].pieceColor === this.state.color) {
                 boardState[row][square].selected = true;
-                selected = true;
-                movesObject = this.availableMoves(row, square);
-            }
-            this.setState({
-                selectedLocation: selectedLocation,
-                availableMoves: movesObject.moves,
-                selected: selected,
-                removedPieces: movesObject.removedPieces
-            });
-        }
-    }
-    
-    movePiece(row, square) {
-        var boardState = this.state.boardState.slice();
-        if(this.state.availableMoves) {
-            var validMove = this.state.availableMoves.find(move => {
-                return move.row === row && move.square === square;
-            });
-        }
-        
+                if(this.state.selectedLocation.row && this.state.selectedLocation.square) {
+                    boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].selected = false;
+                }
 
-        if(validMove) {
-            boardState[row][square].piece = true;
-            boardState[row][square].pieceColor = this.state.turn;
-            boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].piece = false;
-            boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].pieceColor = "";
-            return boardState;
+                this.setState({
+                    boardState,
+                    selectedLocation: {row, square},
+                    selected: true  
+                });
+            } else if(this.state.selected && !boardState[row][square].piece) {
+                socket.emit('checkMove', {
+                    roomID: this.state.roomID,
+                    user_id: parseInt(sessionStorage.getItem('id')),
+                    move: {row, square},
+                    from: {row: this.state.selectedLocation.row, square: this.state.selectedLocation.square },
+                    color: this.state.color,
+                    match_id: this.state.match_id
+                });
+                this.setState({
+                    selected: false
+                });
+            }
+            else {
+                if(this.state.selectedLocation.row && this.state.selectedLocation.square ) {
+                    boardState[this.state.selectedLocation.row][this.state.selectedLocation.square].selected = false;
+                }
+                this.setState({
+                    boardState,
+                    selected: false
+                });
+            }
         }
-       return false;
     }
 
     render() {
+        if(this.state.redirect) {
+            return (<Redirect
+          to={{
+            pathname: "/"
+          }}
+        />);
+        } else {
+            let player1Color = this.state.RED === "player1" ? "red" : "black",
+            player2Color = this.state.BLACK === "player1" ? "black" : "red",
+            playersInfo = (
+            <div className="playersInfo">
+                <div><div className="playerUsernameDiv">Player 1 : {this.state.player1}</div><div className={player1Color + " playerColor"}></div></div>
+                <div><div className="playerUsernameDiv">Player 2 : {this.state.player2}</div><div className={player2Color + " playerColor"}></div></div>
+            </div>
+        );
         return (
+             
             <div className="row">
                 <div className="game col-md-5">
                 <h3>Turn: {this.state.turn}</h3>
+                {playersInfo}
                 <Board squares={this.state.boardState} onClick={(row, square) => this.handleClick(row, square)} />
                 </div>
             </div>
         );
+        }
     }
 }
 

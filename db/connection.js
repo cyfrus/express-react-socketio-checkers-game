@@ -35,10 +35,26 @@ var insert_user = function(username, email, password, about, callback) {
   
 };
 
+
+var getGame = function(user_id, callback) {
+  console.log("GET GAME! + " + user_id);
+  connection.query('SELECT game.roomID as ROOM_ID, game.id as MATCH_ID, u1.id as PLAYER1ID, u2.id as PLAYER2ID, u1.username as PLAYER1, u2.username as PLAYER2, game.turn as TURN, game.moves as MOVES, game.red as RED, game.black as BLACK FROM games_users JOIN users u1 ON games_users.player1_ID = u1.id JOIN users u2 ON u2.id = player2_ID JOIN games game ON game.id = games_users.game_ID WHERE u1.id = ? OR u2.id = ? AND games_users.status = ?', [user_id,user_id, 1],function (error, results, fields){
+    if (error) throw error;
+      callback(results);
+  });
+}
 var authenticate = function(username, password, callback) {
   connection.query('SELECT * FROM users WHERE username = ' + connection.escape(username), function (error, results, fields) {
     if (error) throw error;
-    callback(results[0]);
+    if(results.length) {
+      bcrypt.compare(password,results[0].password, function(err, authenticated) { 
+        if(authenticated) {
+          callback(results[0]);
+        } else {
+          callback(false);
+        }
+    });
+    }
   });
 }
 
@@ -67,17 +83,21 @@ var joinMatch = function(player2_id, match_id, callback) {
 }
 
 var create_match = function(player_id, roomID, turn_time, callback) {
-  connection.query('INSERT INTO games SET ?', {roomID, turn_time: parseInt(turn_time), messages: "", moves: ""}, function (error, results, fields) {
+  let turn = Math.floor(Math.random() * 2) + 1,
+      red = Math.floor(Math.random() * 2) + 1,
+      black = red === 1 ? 2 : 1;
+  connection.query('INSERT INTO games SET ?', {roomID, turn_time: parseInt(turn_time), messages: "", moves: "", red: red, black: black, turn: turn}, function (error, results, fields) {
     if (error) {
       console.log(error);
       callback(false);
     } else {
+      let matchID = results.insertId;
       connection.query('INSERT INTO games_users SET ?', {game_ID: results.insertId, player1_ID: player_id, status: 2}, function (error, results, fields) {
         if (error) {
           console.log(error);
           callback(false);
         } else {
-          callback(true);
+          callback(true, matchID);
         }
       });
     }
@@ -102,6 +122,18 @@ var deleteRoom = function(player_id, callback) {
   });
 }
 
+var insertMove = function(match_id, moves, res) {
+  connection.query('UPDATE games SET moves = ? WHERE id = ?', [moves, match_id], function (error, results, fields) {
+    if(!error) {
+      res(true);
+    } else {
+      res(false);
+    }
+  });
+}
+
+module.exports.insertMove = insertMove;
+module.exports.getGame = getGame;
 module.exports.deleteRoom = deleteRoom;
 module.exports.joinMatch = joinMatch;
 module.exports.getAllGames = getAllGames;

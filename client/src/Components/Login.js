@@ -10,7 +10,6 @@ class Login extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
 
     this.state = {
-      redirectToReferrer: false,
       authenticated: false,
       test: false,
       error: ""
@@ -26,7 +25,7 @@ class Login extends Component {
     axios.post('/authenticate', data)
     .then(function (response) {
       console.log(response);
-      if(response.data.auth) {
+      if(response.data.success) {
         sessionStorage.setItem('username', response.data.user.username);
         sessionStorage.setItem('about', response.data.user.about);
         sessionStorage.setItem('MMR', response.data.user.MMR);
@@ -35,8 +34,8 @@ class Login extends Component {
         sessionStorage.setItem('id', response.data.user.id);
       }
         this.setState({
-          authenticated : response.data.auth,
-          error: response.data.auth ? "" : "Incorrect username or password!"
+          authenticated : response.data.success,
+          error: response.data.success ? "" : "Incorrect username or password!"
         });
     }.bind(this))
     .catch(function (error) {

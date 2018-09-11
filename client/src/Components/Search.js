@@ -18,11 +18,11 @@ class Search extends React.Component {
       gameModeDescriptionAI: "Play against computer that randomly moves pieces. This game mode serves as practice to new players that maybe are not that familiar with checkers.",
       gameList: [],
       displayList: [],
-      searching: false,
+      inLobby: false,
       showGameList: false,
       sliceIndex: 10,
     };
-    this.startSearch = this.startSearch.bind(this);
+    this.createLobby = this.createLobby.bind(this);
     this.selectOpponent = this.selectOpponent.bind(this);
     this.changeDuration = this.changeDuration.bind(this);
     this.deleteGameLobby = this.deleteGameLobby.bind(this);
@@ -30,7 +30,7 @@ class Search extends React.Component {
     this.nextList = this.nextList.bind(this);
     this.previousList = this.previousList.bind(this);
     this.joinGame = this.joinGame.bind(this);
-    this.showGameList = this.showGameList.bind(this);
+    
   }
   
   componentDidMount() {
@@ -53,13 +53,8 @@ class Search extends React.Component {
     });
  
     socket.on('updateGameList', (data) => {
-      let filteredGames = data.filter((game) => {
-          return game.status === "not started" && game.player1_ID !== parseInt(sessionStorage.getItem('id'));
-      });
-      console.log(data);
-      console.log(filteredGames);
       this.setState({
-        gameList: filteredGames,
+        gameList: this.filterGameList(data),
         displayList: this.filterGameList(data).slice(0, 10)
       }, () => {
         console.log(this.state.gameList);
@@ -104,25 +99,6 @@ class Search extends React.Component {
     });
   }
 
-  showGameList() {
-    axios.get('/getGames')
-    .then(function (response) {
-      // handle success
-      console.log(response.data);
-      this.setState({
-        displayList: this.filterGameList(response.data).slice(0, 10),
-        gameList: response.data,
-        showGameList: true
-      })
-    }.bind(this))
-    .catch(function (error) {
-      // handle error
-      console.log(error);
-    })
-    .then(function () {
-      // always executed
-    });
-  }
   
   joinGame(match_id) {
     console.log("join game attempt");
@@ -160,21 +136,17 @@ class Search extends React.Component {
   deleteGameLobby(event) {
     console.log("Deleting lobby");
     this.setState({
-      searching: false,
+      inLobby: false,
     });
 
     socket.emit("deleteLobby");
   }
 
-  startSearch(event) {
+  createLobby(event) {
     this.setState({
-      searching: true
+      inLobby: true
     });
-    console.log("handle submit!");
-    // socket.emit("search", {
-    //   opponent: this.state.opponent,
-    //   duration: this.state.duration
-    // });
+    console.log("Create game lobby!");
     socket.emit('createGame', {
       id: sessionStorage.getItem('id'),
       turn_time: this.state.duration
@@ -213,7 +185,7 @@ class Search extends React.Component {
     if (this.state.gameStatus === "ready") {
       return <Redirect to={"/game/" + this.state.gameID} />;
     }
-    if (!this.state.searching) {
+    if (!this.state.inLobby) {
       return (
         <div className="row">
           <div className="col-md-6">
@@ -261,10 +233,10 @@ class Search extends React.Component {
                 <option value="120">120 Seconds</option>
               </select>
             </div>
-            <div className="form-group"><button className="showGamesBtn btn btn-light" onClick={this.showGameList}> Show Game List</button></div>
+            
             <button
               className="btn btn-success form-control searchbutton"
-              onClick={this.startSearch}
+              onClick={this.createLobby}
             >
               Create Game Lobby
             </button>
@@ -272,7 +244,6 @@ class Search extends React.Component {
           </div>
          <div className="col-md-6">
          <h3>Games</h3>
-          {this.state.showGameList}
           <ul className="list-group">
           {gameList}
           </ul>

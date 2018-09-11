@@ -20,7 +20,6 @@ class About extends React.Component {
             <li>Dario Dzale</li>
             <li>Gorana Basic</li>
             <li>Marko Novosel</li>
-            <li>Marko Marin</li>
           </ul>
 
           And many more. Thank you all.

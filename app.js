@@ -56,38 +56,38 @@ var db = require('./db/connection');
 //   return checkJumps(newPositions, moves, removedPieces, boardState, turn);
 // }
 
-// function outOfBoard(row, square) {
-//   if(row > 7 || row < 0 || square < 0 || square > 7) {
-//       return true;
-//   } 
-//   return false;
-// }
+function outOfBoard(row, square) {
+  if(row > 7 || row < 0 || square < 0 || square > 7) {
+      return true;
+  } 
+  return false;
+}
 
-// function availableMoves(row, square, boardState, turn) {
-//   var movesObject = {
-//       moves: [],
-//       removedPieces: []
-//   };
-  
-//   if(boardState[row][square].pieceColor === "red" && turn === "red"){
-//        if(!outOfBoard(row - 1, square - 1) && !boardState[row - 1][square - 1].piece) {
-//           movesObject.moves.push({row: row - 1, square: square - 1});
-//        }
-//        if(!outOfBoard(row - 1, square + 1) && !boardState[row - 1][square + 1].piece){
-//           movesObject.moves.push({row: row - 1, square: square + 1});
-//        }
-//   } else if(boardState[row][square].pieceColor === "black" && turn === "black") {
-//       if(!outOfBoard(row + 1, square + 1) && !boardState[row + 1][square + 1].piece) {
-//           movesObject.moves.push({row: row + 1, square: square + 1});
-//        }
-//        if(!outOfBoard(row + 1, square - 1) && !boardState[row + 1][square - 1].piece){
-//           movesObject.moves.push({row: row + 1, square: square - 1});
-//        }
-//   }
-//   movesObject = checkJumps([{row: row, square: square}], movesObject.moves, [], boardState, turn);
-//   console.dir(movesObject);
-//   return movesObject;
-// }
+function availableMoves(row, square, move, boardState, turn) {
+  let moves = [];
+
+  if(boardState[row][square].pieceColor === "red" && turn === "red"){
+       if(!outOfBoard(row - 1, square - 1) && !boardState[row - 1][square - 1].piece) {
+        moves.push({row: row - 1, square: square - 1});
+       }
+       if(!outOfBoard(row - 1, square + 1) && !boardState[row - 1][square + 1].piece){
+          moves.push({row: row - 1, square: square + 1});
+       }
+  } else if(boardState[row][square].pieceColor === "black" && turn === "black") {
+      if(!outOfBoard(row + 1, square + 1) && !boardState[row + 1][square + 1].piece) {
+          moves.push({row: row + 1, square: square + 1});
+       }
+       if(!outOfBoard(row + 1, square - 1) && !boardState[row + 1][square - 1].piece){
+          moves.push({row: row + 1, square: square - 1});
+       }
+  }
+  if(moves.find(element => {
+      return element.row === move.row &&  element.square === move.square;
+  })) {
+    return true;
+  }
+  return false;
+}
 
 function gameOver(boardState) {
     var gameOver = true;
@@ -122,81 +122,103 @@ function setTheGame() {
 }
 
 function createGame(player_id, roomID, turn_time, callback) {
-  db.create_match(player_id, roomID, turn_time, (result) => {
+  db.create_match(player_id, roomID, turn_time, (result, matchID) => {
       if(result) {
-        callback(true, roomID);
+        console.log(matchID);
+        callback(true, roomID, matchID);
       }
       else {
-        callback(false, roomID);
+        callback(false, roomID, matchID);
       }
   });
 }
 
 io.on('connection', function (socket) {
+  socket.on('checkIfUserIsInTheRoom', function(room){
+    console.log("provjera da li je korisnik u sobi!");
+    console.log(socket.rooms);
+    console.log(room);
+    if(!(room in socket.rooms)){
+      socket.join(room);
+      socket.to(room).emit('reconnected', "opponent reconnected");
+    } else {
+      console.log("user is in room");
+    }
+  });
+  socket.on('hey', function(data){
+    console.log(socket.rooms);
+    console.log("hey !" + data.roomID);
+    socket.to(data.roomID).emit('hey', "protivnik se pridruzio");
+  });
+
+  socket.on('checkMove', function(data){
+    db.getGame(data.user_id, (result) => {
+        let moves = result[result.length-1].MOVES,
+            boardState = [];
+            console.log(data);
+        if(!moves) {
+          boardState = setTheGame();
+        } else {
+          boardState = transformTextToMoves(moves);
+        }
+        if(availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
+            db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), inserted => {
+              db.getGame(data.user_id, (res) => {
+                io.in(data.roomID).emit('updateBoardState', transformTextToMoves(res[res.length-1].MOVES));
+              });
+            });
+          }
+          // boardState = transformTextToMoves(moves);
+          // if(availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
+          //   db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color));
+          //   io.in(data.roomID).emit('updateBoardState', transformTextToMoves(moves));
+          // }
+    });
+    io.in(data.roomID).emit('checkMoveResponse');
+  });
+
+  socket.on('rejoinGame', function(data) {
+      db.getGame(data.user_id, (result) => {
+        if(result.length) {
+          socket.join(result[0].ROOM_ID);
+          socket.gameRoom = result[0].ROOM_ID;
+          socket.to(result[0].ROOM_ID).emit('joined', "opponent joined!");
+        }
+      })
+  });
+  
   socket.on('createGame', function(data) {
     socket.player_id = data.id;
+    socket.inLobby = true;
     console.log("create game!");
-    createGame(data.id, generateRoomName(), data.turn_time, (gameCreated, roomID) => {
+    createGame(data.id, generateRoomName(), data.turn_time, (gameCreated, roomID, matchID) => {
         if(gameCreated) {
+          socket.join(roomID);
+          socket.gameRoom = roomID;
           db.getAllGames((result) => {
-            socket.join(roomID);
             io.of('/').emit('updateGameList', result);
           });
         }
     });
   });
+
   socket.on('joinGame', function(data) {
-    db.joinMatch(data.user_id, data.match_id, (joinedGame, match_id) => {
+    db.joinMatch(data.user_id, data.match_id, (joinedGame, roomID) => {
       if(joinedGame) {
-        console.log("joined game + match ID: " + match_id);
-        socket.join(match_id);
-        io.to(match_id).emit('startGame', match_id);
+        socket.join(roomID);
+        io.to(roomID).emit('startGame', roomID);
+        // db.getGame(data.match_id, (result) => {
+        //   console.log(result);
+        //   io.in(roomID).emit('gameData', result);
+        // });
+        console.log("joined game + match ID:" + data.match_id + " roomID + " + roomID);
+        
       }
     });
   });
-  // socket.on('search', function (data) {
-  //     socket.duration = data.duration;
-  //     players.push(socket);
-  //     opponent = findOpponent(socket);
-  //     console.log("Protivnik je " + socket.opponent);
-  //     if(opponent) {
-  //       roomID = generateRoomName();
-  //       game.id = roomID;
-  //       game.playerOne = socket;
-  //       game.playerTwo = opponent;
-  //       opponent.join(roomID);
-  //       socket.join(roomID);
-  //       io.to(roomID).emit('foundGame', {game: roomID});
-  //     }
-  // });
-
-  socket.on('move', function(data){
-    console.log("move!");
-    console.log();
-    if(true) {
-        console.log("njegov turn!");
-    } else {
-        console.log("nije njegov turn!");
-    }
-    io.to(roomID).emit('updateBoardState', data);
-  });
-
-  function playersTurn(game, socket) {
-    if((socket.id === game.playerOne.socket.id && game.turn === game.playerOneColor) || socket.id === game.playerTwo.socket.id && game.turn === game.playerTwoColor) {
-        return true;
-    }
-    return false;
-}
-  socket.on('changeTurn', function(data) {
-    socket.game.turn = data.turn;
-  });
-
-  socket.on('updateBoardState', function(data){
-    socket.boardState = data.boardState;
-  });
 
   socket.on('deleteLobby', function() {
-    if(socket.player_id) {
+    if(socket.inLobby) {
       db.deleteRoom(socket.player_id, (deletedRoom) => {
         if(deletedRoom) {
           db.getAllGames((result) => {
@@ -210,7 +232,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
-    if(socket.player_id) {
+    if(socket.inLobby) {
       db.deleteRoom(socket.player_id, (deletedRoom) => {
         if(deletedRoom) {
           db.getAllGames((result) => {
@@ -227,6 +249,40 @@ io.on('connection', function (socket) {
 
   console.log("player connected!");
 });
+
+var transformTextToMoves = function(moves) {
+  let boardState = setTheGame(),
+      start = 0, end = 7,
+      fromRow, fromSquare, toRow, toSquare, color = "";
+
+  for(let i = 0; i < moves.length; i = i + 7) {
+    let move = moves.slice(start, end);
+    fromRow = parseInt(move.slice(2,3));
+    fromSquare = parseInt(move.slice(3, 4));
+    toRow = parseInt(move.slice(5,6));
+    toSquare = parseInt(move.slice(6,7));
+    if(move.slice(0,1) === "B") {
+      color = "black";
+    } else {
+      color = "red";
+    }
+    start = start + 7;
+    end = end + 7;
+    boardState[toRow][toSquare].piece = true;
+    boardState[toRow][toSquare].pieceColor = color;
+    boardState[fromRow][fromSquare].piece = false;
+    boardState[fromRow][fromSquare].pieceColor = "";
+  }
+  return boardState;
+}
+
+var transformMoveToText = function(from, to, color) {
+  let move = "",
+      colorPrefix = color === "red" ? "R" : "B";
+   move = colorPrefix + "F" + from.row.toString() + from.square.toString() + "T" + to.row.toString() + to.square.toString();
+   console.log(move);
+   return move;
+}
 
 function generateRoomName() {
   var roomId = crypto.randomBytes(20).toString('hex');

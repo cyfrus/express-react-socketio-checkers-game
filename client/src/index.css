@@ -358,3 +358,27 @@ button:focus
   margin-top: 20px;
   border: 1px solid lightgray;
 }
+
+.red {
+  background-color: red;
+}
+.black {
+  background-color: black;
+}
+.playerColor {
+  width: 30px;
+  height: 15px;
+}
+.playersInfo {
+  margin-bottom: 20px;
+}
+.playersInfo div {
+  display: inline-block;
+  font-size: 20px;
+}
+.playersInfo div:nth-child(2) {
+  margin-left: 20px;
+}
+.playerUsernameDiv {
+  margin-right: 20px;
+}

@@ -53,7 +53,7 @@ class Registration extends React.Component {
     });
   }
   handleSubmit(e) {
-    if (Object.keys(this.state).length) {
+    
       axios
         .post("/register", {
           username: this.state.username,
@@ -71,7 +71,7 @@ class Registration extends React.Component {
         .catch(error => {
           console.log(error);
         });
-    }
+    
   }
 
   render() {
