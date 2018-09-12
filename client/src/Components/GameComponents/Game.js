@@ -34,10 +34,9 @@ class Game extends React.Component {
             boardState: setTheGame(),
             turn: "",
             redPieces: 12,
-            whitePieces: 12,
+            blackPieces: 12,
             selected: false,
             selectedLocation: {row: false, square: false},
-            availableMoves: [],
             removedPieces: [],
             gameOver: false,
             player1: '',
@@ -119,18 +118,18 @@ class Game extends React.Component {
                 red: data.RED,
                 black: data.BLACK,
                 roomID: data.ROOM_ID,
-                boardState: data.MOVES
+                boardState: data.MOVES,
+                messages: []
             });
             console.log(data);
         });
         socket.on('checkMoveResponse', (data) => {
             console.log("checkMoveResponse!");
         });
-        socket.on('hey', (data) => {
-            console.log(data);
-        });
-        socket.on('gameData', (data) => {
-            console.log(data);
+        socket.on('message', (data) => {
+            this.setState({
+                messages: this.state.messages.push(data.message)
+            })
         });
         socket.on('reconnected', (data) => {
             console.log(data);

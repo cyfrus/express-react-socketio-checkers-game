@@ -35,7 +35,7 @@ class Home extends React.Component {
                 <Link to="/search">New Game</Link>
               </li>
               <li>
-                <Link to="/tournaments">Tournaments</Link>
+                <Link to="/stats">Statistics</Link>
               </li>
               <li>
                 <Link to="/rules">Rules</Link>

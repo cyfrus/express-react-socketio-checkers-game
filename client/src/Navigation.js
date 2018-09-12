@@ -22,7 +22,7 @@ const Navigation = () => (
       <PrivateRoute path="/search" component={Search} />
       <PrivateRoute exact path="/" component={Home} />
       <PublicRoute path="/login" component={Login} />
-      <PrivateRoute path="/tournaments" component={Tournaments} />
+      <PrivateRoute path="/stats" component={Tournaments} />
       <PrivateRoute path="/rules" component={Rules} />
       <PrivateRoute path="/about" component={About} />
       <PrivateRoute path="/profile" component={Profile} />

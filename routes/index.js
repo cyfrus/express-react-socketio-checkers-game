@@ -73,24 +73,34 @@ var transformTextToMoves = function(moves) {
   let boardState = setTheGame(),
       start = 0, end = 7,
       fromRow, fromSquare, toRow, toSquare, color = "";
-
   for(let i = 0; i < moves.length; i = i + 7) {
     let move = moves.slice(start, end);
-    fromRow = parseInt(move.slice(2,3));
-    fromSquare = parseInt(move.slice(3, 4));
-    toRow = parseInt(move.slice(5,6));
-    toSquare = parseInt(move.slice(6,7));
     if(move.slice(0,1) === "B") {
       color = "black";
     } else {
       color = "red";
     }
-    start = start + 7;
-    end = end + 7;
-    boardState[toRow][toSquare].piece = true;
-    boardState[toRow][toSquare].pieceColor = color;
-    boardState[fromRow][fromSquare].piece = false;
-    boardState[fromRow][fromSquare].pieceColor = "";
+    if(move.slice(0, 5) === "DELET") {
+      console.log(move);
+      console.log("skok!");
+      let delRow = move.slice(5,6),
+          delSquare = move.slice(6, 7);
+      boardState[delRow][delSquare].piece = false;
+      boardState[delRow][delSquare].pieceColor = "";
+      start = start + 7;
+      end = end + 7;
+    } else {
+      fromRow = parseInt(move.slice(2,3));
+      fromSquare = parseInt(move.slice(3, 4));
+      toRow = parseInt(move.slice(5,6));
+      toSquare = parseInt(move.slice(6,7));
+      start = start + 7;
+      end = end + 7;
+      boardState[toRow][toSquare].piece = true;
+      boardState[toRow][toSquare].pieceColor = color;
+      boardState[fromRow][fromSquare].piece = false;
+      boardState[fromRow][fromSquare].pieceColor = "";
+    }
   }
   return boardState;
 }

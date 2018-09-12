@@ -56,7 +56,7 @@ var db = require('./db/connection');
 //   return checkJumps(newPositions, moves, removedPieces, boardState, turn);
 // }
 
-function jumps(row, square, move, boardState, turn, ) {
+function jumps(row, square, move, boardState, turn) {
   let moves = [], deleted = [], result;
   if(!outOfBoard(row + 2, square + 2) && turn === "black" && boardState[row + 1][square + 1].pieceColor === "red" && !boardState[row + 2][square + 2].piece) {
     moves.push({row: row + 2, square: square + 2});
@@ -80,6 +80,7 @@ function jumps(row, square, move, boardState, turn, ) {
           result = deleted[index];
         }
     });
+    console.log("rezultat skokova je: result");
   return result;
 }
 
@@ -182,7 +183,7 @@ io.on('connection', function (socket) {
   socket.on('checkMove', function(data){
     db.getGame(data.user_id, (result) => {
         let moves = result[result.length-1].MOVES,
-            boardState = [], canJump;
+            boardState = [], canJump, wasLastMoveJump;
             console.log(data);
         if(!moves) {
           boardState = setTheGame();
@@ -190,20 +191,28 @@ io.on('connection', function (socket) {
           boardState = transformTextToMoves(moves);
         }
         canJump = jumps(data.from.row, data.from.square, data.move, boardState, data.color);
+        console.log(wasLastMoveJump = moves.slice(moves.length-7, moves.length-3));
         console.log("Can jump je ");
         console.log(canJump);
         if(availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
-            db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), inserted => {
+            db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), true, inserted => {
               db.getGame(data.user_id, (res) => {
                 let updatedState = res[res.length-1];
                 console.log(res[res.length-1]);
                 updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-                
                 io.in(data.roomID).emit('updateBoardState', updatedState);
               });
             });
         } else if(canJump) {
-            console.log(jumpToText(canJump));
+          console.log(jumpToText(canJump, data.from, data.move, data.color));
+          db.insertMove(data.match_id, moves + jumpToText(canJump, data.from, data.move, data.color), false, inserted => {
+            db.getGame(data.user_id, (res) => {
+              let updatedState = res[res.length-1];
+              console.log(res[res.length-1]);
+              updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
+              io.in(data.roomID).emit('updateBoardState', updatedState);
+            });
+          });
         }
     });
     io.in(data.roomID).emit('checkMoveResponse');
@@ -239,10 +248,6 @@ io.on('connection', function (socket) {
       if(joinedGame) {
         socket.join(roomID);
         io.to(roomID).emit('startGame', roomID);
-        // db.getGame(data.match_id, (result) => {
-        //   console.log(result);
-        //   io.in(roomID).emit('gameData', result);
-        // });
         console.log("joined game + match ID:" + data.match_id + " roomID + " + roomID);
         
       }
@@ -286,32 +291,43 @@ var transformTextToMoves = function(moves) {
   let boardState = setTheGame(),
       start = 0, end = 7,
       fromRow, fromSquare, toRow, toSquare, color = "";
-
+      
   for(let i = 0; i < moves.length; i = i + 7) {
     let move = moves.slice(start, end);
-    fromRow = parseInt(move.slice(2,3));
-    fromSquare = parseInt(move.slice(3, 4));
-    toRow = parseInt(move.slice(5,6));
-    toSquare = parseInt(move.slice(6,7));
     if(move.slice(0,1) === "B") {
       color = "black";
     } else {
       color = "red";
     }
-    start = start + 7;
-    end = end + 7;
-    boardState[toRow][toSquare].piece = true;
-    boardState[toRow][toSquare].pieceColor = color;
-    boardState[fromRow][fromSquare].piece = false;
-    boardState[fromRow][fromSquare].pieceColor = "";
+    if(move.slice(0, 5) === "DELET") {
+      console.log(move);
+      console.log("skok!");
+      let delRow = move.slice(5,6),
+          delSquare = move.slice(6, 7)
+      boardState[delRow][delSquare].piece = false;
+      boardState[delRow][delSquare].pieceColor = "";
+      start = start + 7;
+      end = end + 7;
+    } else {
+      fromRow = parseInt(move.slice(2,3));
+      fromSquare = parseInt(move.slice(3, 4));
+      toRow = parseInt(move.slice(5,6));
+      toSquare = parseInt(move.slice(6,7));
+      start = start + 7;
+      end = end + 7;
+      boardState[toRow][toSquare].piece = true;
+      boardState[toRow][toSquare].pieceColor = color;
+      boardState[fromRow][fromSquare].piece = false;
+      boardState[fromRow][fromSquare].pieceColor = "";
+    }
   }
   return boardState;
 }
 
-var jumpToText = function(deleted) {
+var jumpToText = function(deleted, from, to, color) {
   let move = "";
   move = "DELET" + deleted.row.toString() + deleted.square.toString();
-  return move;
+  return transformMoveToText(from, to, color) + move;
 }
 
 var transformMoveToText = function(from, to, color) {
