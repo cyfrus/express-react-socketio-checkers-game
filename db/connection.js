@@ -140,9 +140,18 @@ var insertMove = function(match_id, moves, changeTurn, res) {
       }
     });
   });
-  
 }
 
+var changeTurn = function(match_id) {
+  connection.query('SELECT turn FROM games WHERE id = ?', [match_id], function(error, results, fields){
+      let turn = results.turn === 'player1' ? 2 : 1;
+      connection.query('UPDATE games SET ? WHERE id = ' + connection.escape(match_id), {turn}, function (error, results, fields) {
+          if(error) throw error;
+      });
+  });
+}
+
+module.exports.changeTurn = changeTurn;
 module.exports.insertMove = insertMove;
 module.exports.getGame = getGame;
 module.exports.deleteRoom = deleteRoom;

@@ -58,29 +58,29 @@ var db = require('./db/connection');
 
 function jumps(row, square, move, boardState, turn) {
   let moves = [], deleted = [], result;
-  if(!outOfBoard(row + 2, square + 2) && turn === "black" && boardState[row + 1][square + 1].pieceColor === "red" && !boardState[row + 2][square + 2].piece) {
-    moves.push({row: row + 2, square: square + 2});
-    deleted.push({row: row + 1, square: square + 1});
+  if (!outOfBoard(row + 2, square + 2) && turn === "black" && boardState[row + 1][square + 1].pieceColor === "red" && !boardState[row + 2][square + 2].piece) {
+    moves.push({ row: row + 2, square: square + 2 });
+    deleted.push({ row: row + 1, square: square + 1 });
   }
-  if(!outOfBoard(row + 2, square - 2) && turn === "black" && boardState[row + 1][square - 1].pieceColor === "red" && !boardState[row + 2][square - 2].piece) {
-      moves.push({row: row + 2, square: square - 2});
-      deleted.push({row: row + 1, square: square -1});
+  if (!outOfBoard(row + 2, square - 2) && turn === "black" && boardState[row + 1][square - 1].pieceColor === "red" && !boardState[row + 2][square - 2].piece) {
+    moves.push({ row: row + 2, square: square - 2 });
+    deleted.push({ row: row + 1, square: square - 1 });
+  }
+  if (!outOfBoard(row - 2, square - 2) && turn === "red" && boardState[row - 1][square - 1].pieceColor === "black" && !boardState[row - 2][square - 2].piece) {
+    moves.push({ row: row - 2, square: square - 2 });
+    deleted.push({ row: row - 1, square: square - 1 });
+  }
+  if (!outOfBoard(row - 2, square + 2) && turn === "red" && boardState[row - 1][square + 1].pieceColor === "black" && !boardState[row - 2][square + 2].piece) {
+    moves.push({ row: row - 2, square: square + 2 });
+    deleted.push({ row: row - 1, square: square + 1 });
+  }
+  console.log(moves);
+  moves.forEach((element, index) => {
+    if (element.row === move.row && element.square === move.square) {
+      result = deleted[index];
     }
-    if(!outOfBoard(row - 2, square - 2) && turn === "red" && boardState[row - 1][square - 1].pieceColor === "black" && !boardState[row - 2][square - 2].piece) {
-      moves.push({row: row - 2, square: square - 2});
-      deleted.push({row: row - 1, square: square - 1});
-    }
-    if(!outOfBoard(row - 2, square + 2) && turn === "red" && boardState[row - 1][square + 1].pieceColor === "black" && !boardState[row - 2][square + 2].piece) {
-      moves.push({row: row - 2, square: square + 2});
-      deleted.push({row: row - 1, square: square + 1});
-    }
-
-    moves.forEach((element, index) => {
-        if(element.row === move.row && element.square === move.square) {
-          result = deleted[index];
-        }
-    });
-    console.log("rezultat skokova je: result");
+  });
+  console.log("rezultat skokova je: " + result);
   return result;
 }
 
@@ -182,8 +182,9 @@ io.on('connection', function (socket) {
 
   socket.on('checkMove', function(data){
     db.getGame(data.user_id, (result) => {
-        let moves = result[result.length-1].MOVES,
-            boardState = [], canJump, wasLastMoveJump;
+        let game = result[result.length-1],
+            moves = game.MOVES,
+            boardState = [], canJump, wasLastMoveJump, myTurn = false;
             console.log(data);
         if(!moves) {
           boardState = setTheGame();
@@ -191,10 +192,16 @@ io.on('connection', function (socket) {
           boardState = transformTextToMoves(moves);
         }
         canJump = jumps(data.from.row, data.from.square, data.move, boardState, data.color);
-        console.log(wasLastMoveJump = moves.slice(moves.length-7, moves.length-3));
+        wasLastMoveJump = moves.slice(moves.length-7, moves.length-2) === "DELET" ? true: false;
+        if(wasLastMoveJump) {
+          let lastMoveColor = moves.slice(moves.length-14, moves.length-13) === "B" ? "black" : "red";
+          myTurn = lastMoveColor === data.color ? true : false;
+        }
+        console.log(wasLastMoveJump);
         console.log("Can jump je ");
         console.log(canJump);
-        if(availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
+
+        if (!myTurn && availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
             db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), true, inserted => {
               db.getGame(data.user_id, (res) => {
                 let updatedState = res[res.length-1];
@@ -204,16 +211,60 @@ io.on('connection', function (socket) {
               });
             });
         } else if(canJump) {
-          console.log(jumpToText(canJump, data.from, data.move, data.color));
-          db.insertMove(data.match_id, moves + jumpToText(canJump, data.from, data.move, data.color), false, inserted => {
+          let newMoves, canJumpAgain = false;
+          console.log(jumpToText(canJump, data.from, data.move, data.color)); 
+          if(data.color === "black") {
+            newMoves = [
+              {row: data.move.row + 2, square: data.move.square + 2},
+              {row: data.move.row + 2, square: data.move.square - 2},
+            ];
+          } else {
+            newMoves = [
+              {row: data.move.row - 2, square: data.move.square + 2},
+              {row: data.move.row - 2, square: data.move.square - 2}
+            ];
+          }
+          console.log(newMoves);
+          newMoves.forEach(nextMove => {
+              if(jumps(data.move.row, data.move.square, nextMove.row, nextMove.square, boardState, data.color)) {
+                canJumpAgain = true;
+              }
+          });
+          console.log("Can jump again: " + canJumpAgain);
+          db.insertMove(data.match_id, moves + jumpToText(canJump, data.from, data.move, data.color), !canJumpAgain, inserted => {
             db.getGame(data.user_id, (res) => {
               let updatedState = res[res.length-1];
-              console.log(res[res.length-1]);
               updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
               io.in(data.roomID).emit('updateBoardState', updatedState);
             });
           });
-        }
+        } 
+        // else if(wasLastMoveJump) {
+        //   console.log("Last move was jump!");
+        //   let fromMove = transformTextToMove(moves.slice(moves.length-14, moves.length-7));
+        //   canJump = jumps(fromMove.row, fromMove.square, data.move, boardState, data.color);
+        //     if(canJump) {
+        //       console.log("Can jump !");
+        //       db.insertMove(data.match_id, moves + jumpToText(canJump, fromMove, data.move, data.color), true, inserted => {
+        //         db.getGame(data.user_id, (res) => {
+        //           let updatedState = res[res.length-1];
+        //           console.log(res[res.length-1]);
+        //           updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
+        //           io.in(data.roomID).emit('updateBoardState', updatedState);
+        //         });
+        //       });
+        //     } else {
+        //         console.log("Change turn !");
+        //         db.changeTurn(data.match_id, function(){
+        //           db.getGame(data.user_id, (res) => {
+        //             let updatedState = res[res.length-1];
+        //             console.log(res[res.length-1]);
+        //             updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
+        //             io.in(data.roomID).emit('updateBoardState', updatedState);
+        //           });
+        //         });
+        //     }
+        // }
     });
     io.in(data.roomID).emit('checkMoveResponse');
   });
@@ -322,6 +373,13 @@ var transformTextToMoves = function(moves) {
     }
   }
   return boardState;
+}
+
+var transformTextToMove = function(moveText) {
+    let row, square;
+    row = parseInt(moveText.slice(5,6));
+    square = parseInt(moveText.slice(6,7));
+    return {row, square};
 }
 
 var jumpToText = function(deleted, from, to, color) {
