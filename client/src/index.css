@@ -382,3 +382,7 @@ button:focus
 .playerUsernameDiv {
   margin-right: 20px;
 }
+.winner {
+  font-size: 20px;
+  font-weight: bold;
+}

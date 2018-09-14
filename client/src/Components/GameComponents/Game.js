@@ -47,7 +47,8 @@ class Game extends React.Component {
             color: "",
             match_id: null,
             roomID: '',
-            redirect: false
+            redirect: false,
+            winner: ""
         }
         this.handleClick = this.handleClick.bind(this);
     }
@@ -97,7 +98,7 @@ class Game extends React.Component {
                     black: response.data.BLACK,
                     roomID: response.data.ROOM_ID,
                     boardState: response.data.MOVES
-                
+                    
                 }, () => {
                     socket.emit('checkIfUserIsInTheRoom', this.state.roomID); 
                     
@@ -107,6 +108,7 @@ class Game extends React.Component {
           .catch(function (error) {
             console.log(error);
           });
+
         socket.on('updateBoardState', (data) => {
             this.setState({
                 player1: data.PLAYER1,
@@ -119,7 +121,9 @@ class Game extends React.Component {
                 black: data.BLACK,
                 roomID: data.ROOM_ID,
                 boardState: data.MOVES,
-                messages: []
+                messages: [],
+                winner: data.WINNER,
+                gameOver: data.GAMEOVER
             });
             console.log(data);
         });
@@ -137,7 +141,6 @@ class Game extends React.Component {
         
     }
     
-
     handleClick(row, square) {
        
         if(!this.state.gameOver && this.state.myTurn) {
@@ -179,27 +182,34 @@ class Game extends React.Component {
     }
 
     render() {
+        let gameOver;
+        if(this.state.gameOver) {
+            gameOver = (<div className="winner">WINNER: {this.state.winner}</div>);
+        }
         if(this.state.redirect) {
             return (<Redirect
           to={{
             pathname: "/"
           }}
         />);
-        } else {
+        }
+        else {
             let player1Color = this.state.RED === "player1" ? "red" : "black",
             player2Color = this.state.BLACK === "player1" ? "black" : "red",
             playersInfo = (
             <div className="playersInfo">
                 <div><div className="playerUsernameDiv">Player 1 : {this.state.player1}</div><div className={player1Color + " playerColor"}></div></div>
                 <div><div className="playerUsernameDiv">Player 2 : {this.state.player2}</div><div className={player2Color + " playerColor"}></div></div>
+                
             </div>
+            
         );
         return (
-             
             <div className="row">
                 <div className="game col-md-5">
                 <h3>Turn: {this.state.turn}</h3>
                 {playersInfo}
+                {gameOver}
                 <Board squares={this.state.boardState} onClick={(row, square) => this.handleClick(row, square)} />
                 </div>
             </div>

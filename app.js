@@ -13,49 +13,6 @@ var io = require('socket.io')(server);
 var db = require('./db/connection');
 
 
-// function checkJumps(positions, moves, removedPieces, boardState, turn){
-//   let newPositions = [],
-//       jumpFurther = false;
-
-//   if(!positions.length) {
-//       return {moves: moves, removedPieces: removedPieces};
-//   }
-//   positions.forEach( (position, index) => {
-//       if(!outOfBoard(position.row + 2, position.square + 2) && turn === "black" && boardState[position.row + 1][position.square + 1].pieceColor === "red" && !boardState[position.row + 2][position.square + 2].piece) {
-//           newPositions.push({row: position.row + 2, square: position.square + 2});
-//           moves.push({row: position.row + 2, square: position.square + 2});
-//           removedPieces.push({row: position.row + 1, square: position.square + 1});
-//           jumpFurther = true;
-//       }
-//       if(!outOfBoard(position.row + 2, position.square - 2) && turn === "black" && boardState[position.row + 1][position.square - 1].pieceColor === "red" && !boardState[position.row + 2][position.square - 2].piece) {
-//           newPositions.push({row: position.row + 2, square: position.square - 2});
-//           moves.push({row: position.row + 2, square: position.square - 2});
-//           removedPieces.push({row: position.row + 1, square: position.square - 1});
-//           jumpFurther = true;
-//       }
-//       if(!outOfBoard(position.row - 2, position.square - 2) && turn === "red" && boardState[position.row - 1][position.square - 1].pieceColor === "black" && !boardState[position.row - 2][position.square - 2].piece) {
-//           newPositions.push({row: position.row - 2, square: position.square - 2});
-//           moves.push({row: position.row - 2, square: position.square - 2});
-//           removedPieces.push({row: position.row - 1, square: position.square - 1});
-//           jumpFurther = true;
-//       }
-//       if(!outOfBoard(position.row - 2, position.square + 2) && turn === "red" && boardState[position.row - 1][position.square + 1].pieceColor === "black" && !boardState[position.row - 2][position.square + 2].piece) {
-//           newPositions.push({row: position.row - 2, square: position.square + 2});
-//           moves.push({row: position.row - 2, square: position.square + 2});
-//           removedPieces.push({row: position.row - 1, square: position.square + 1, });
-//           jumpFurther = true;
-//       }
-//       if(jumpFurther) {
-//           moves = moves.filter(location => {
-//               return location.row !== position.row && location.square !== position.square;
-//           });
-//           jumpFurther = false;
-//       }
-//   });
-  
-//   return checkJumps(newPositions, moves, removedPieces, boardState, turn);
-// }
-
 function jumps(row, square, move, boardState, turn) {
   let moves = [], deleted = [], result;
   if (!outOfBoard(row + 2, square + 2) && turn === "black" && boardState[row + 1][square + 1].pieceColor === "red" && !boardState[row + 2][square + 2].piece) {
@@ -119,14 +76,21 @@ function availableMoves(row, square, move, boardState, turn) {
 }
 
 function gameOver(boardState) {
-    var gameOver = true;
+    var gameOver = false, redCount = 0, blackCount = 0;
     boardState.forEach((row, rowIndex) => {
       row.forEach((square, squareIndex) => {
-          if(!availableMoves(rowIndex, squareIndex).moves.length) {
-            gameOver = false;
+          if(square.piece && square.pieceColor === "black") {
+            blackCount++;
+          } else if(square.piece && square.pieceColor === "red") {
+            redCount++;
           }
       });
     });
+    console.log("number of black pieces: " + blackCount);
+    console.log("number of red pieces: " + redCount);
+    if(!redCount || !blackCount) {
+      gameOver = true;
+    }
     return gameOver;
 }
 
@@ -197,9 +161,7 @@ io.on('connection', function (socket) {
           let lastMoveColor = moves.slice(moves.length-14, moves.length-13) === "B" ? "black" : "red";
           myTurn = lastMoveColor === data.color ? true : false;
         }
-        console.log(wasLastMoveJump);
-        console.log("Can jump je ");
-        console.log(canJump);
+  
 
         if (!myTurn && availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
             db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), true, inserted => {
@@ -207,6 +169,14 @@ io.on('connection', function (socket) {
                 let updatedState = res[res.length-1];
                 console.log(res[res.length-1]);
                 updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
+                if(gameOver(updatedState.MOVES)) {
+                  console.log("gameOver");
+                  updatedState.WINNER = data.color;
+                  updatedState.GAMEOVER = true;
+                } else {
+                  updatedState.WINNER = "";
+                  updatedState.GAMEOVER = false;
+                }
                 io.in(data.roomID).emit('updateBoardState', updatedState);
               });
             });
@@ -235,36 +205,20 @@ io.on('connection', function (socket) {
             db.getGame(data.user_id, (res) => {
               let updatedState = res[res.length-1];
               updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-              io.in(data.roomID).emit('updateBoardState', updatedState);
+              if(gameOver(updatedState.MOVES)) {
+                console.log("gameOver");
+                updatedState.WINNER = data.color;
+                updatedState.GAMEOVER = true;
+              } else {
+                updatedState.WINNER = "";
+                updatedState.GAMEOVER = false;
+              }
+                io.in(data.roomID).emit('updateBoardState', updatedState);
             });
           });
-        } 
-        // else if(wasLastMoveJump) {
-        //   console.log("Last move was jump!");
-        //   let fromMove = transformTextToMove(moves.slice(moves.length-14, moves.length-7));
-        //   canJump = jumps(fromMove.row, fromMove.square, data.move, boardState, data.color);
-        //     if(canJump) {
-        //       console.log("Can jump !");
-        //       db.insertMove(data.match_id, moves + jumpToText(canJump, fromMove, data.move, data.color), true, inserted => {
-        //         db.getGame(data.user_id, (res) => {
-        //           let updatedState = res[res.length-1];
-        //           console.log(res[res.length-1]);
-        //           updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-        //           io.in(data.roomID).emit('updateBoardState', updatedState);
-        //         });
-        //       });
-        //     } else {
-        //         console.log("Change turn !");
-        //         db.changeTurn(data.match_id, function(){
-        //           db.getGame(data.user_id, (res) => {
-        //             let updatedState = res[res.length-1];
-        //             console.log(res[res.length-1]);
-        //             updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-        //             io.in(data.roomID).emit('updateBoardState', updatedState);
-        //           });
-        //         });
-        //     }
-        // }
+        } else if(gameOver(boardState)) {
+          console.log("game is Over!");
+        }
     });
     io.in(data.roomID).emit('checkMoveResponse');
   });
