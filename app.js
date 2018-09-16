@@ -76,23 +76,53 @@ function availableMoves(row, square, move, boardState, turn) {
 }
 
 function gameOver(boardState) {
-    var gameOver = false, redCount = 0, blackCount = 0;
-    boardState.forEach((row, rowIndex) => {
-      row.forEach((square, squareIndex) => {
-          if(square.piece && square.pieceColor === "black") {
-            blackCount++;
-          } else if(square.piece && square.pieceColor === "red") {
-            redCount++;
-          }
-      });
-    });
-    console.log("number of black pieces: " + blackCount);
-    console.log("number of red pieces: " + redCount);
-    if(!redCount || !blackCount) {
-      gameOver = true;
-    }
-    return gameOver;
+  // console.log("game over function!");
+  //   var gameOver = "", redCount = 0, blackCount = 0, blackMoveCount = 0, redMoveCount = 0;
+  //   boardState.forEach((row, rowIndex) => {
+  //     row.forEach((square, squareIndex) => {
+  //         if(square.piece && square.pieceColor === "black") {
+  //           blackCount++;
+  //           blackMoveCount += getAvailableMoves(rowIndex, squareIndex, boardState);
+  //         } else if(square.piece && square.pieceColor === "red") {
+  //           redCount++;
+  //           redMoveCount += getAvailableMoves(rowIndex, squareIndex, boardState);
+  //         }
+          
+  //     });
+  //   });
+  //   console.log("number of red moves: " + redMoveCount);
+  //   console.log("number of black moves: " + blackMoveCount);
+  //   console.log("number of black pieces: " + blackCount);
+  //   console.log("number of red pieces: " + redCount);
+  //   if(!redCount || !redMoveCount) {
+  //     gameOver = "black";
+  //   } else if(!blackCount || !blackMoveCount) {
+  //     gameOver = "red";
+  //   }
+    // return gameOver;
+    return "red";
 }
+
+function getAvailableMoves (row, square, boardState) {
+  let moves = [];
+  if(boardState[row][square].pieceColor === "red"){
+    if(!outOfBoard(row - 1, square - 1) && !boardState[row - 1][square - 1].piece) {
+     moves.push({row: row - 1, square: square - 1});
+    }
+    if(!outOfBoard(row - 1, square + 1) && !boardState[row - 1][square + 1].piece){
+       moves.push({row: row - 1, square: square + 1});
+    }
+} else if(boardState[row][square].pieceColor === "black") {
+   if(!outOfBoard(row + 1, square + 1) && !boardState[row + 1][square + 1].piece) {
+       moves.push({row: row + 1, square: square + 1});
+    }
+    if(!outOfBoard(row + 1, square - 1) && !boardState[row + 1][square - 1].piece){
+       moves.push({row: row + 1, square: square - 1});
+    }
+  }
+  return moves.length;
+}
+
 
 function setTheGame() {
   var boardState = [8];
@@ -169,10 +199,11 @@ io.on('connection', function (socket) {
                 let updatedState = res[res.length-1];
                 console.log(res[res.length-1]);
                 updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-                if(gameOver(updatedState.MOVES)) {
-                  console.log("gameOver");
-                  updatedState.WINNER = data.color;
+                if(gameOver(updatedState.MOVES) !== "") {
+                  console.log("gameOver + " );
+                  updatedState.WINNER = gameOver(updatedState.MOVES);
                   updatedState.GAMEOVER = true;
+                  db.insertGameWinner(data.match_id, data.user_id);
                 } else {
                   updatedState.WINNER = "";
                   updatedState.GAMEOVER = false;

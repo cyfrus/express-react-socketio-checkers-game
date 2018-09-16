@@ -142,6 +142,16 @@ var insertMove = function(match_id, moves, changeTurn, res) {
   });
 }
 
+var insertGameWinner = function(match_id, winner) {
+  connection.query('SELECT g.' + winner + ' from games g INNER JOIN games_users gu ON gu.games_ID = g.id WHERE id = ?', [match_id], function(error, results, fields) {
+    console.log(results);
+    connection.query('UPDATE games_users SET winner = ? WHERE game_ID = ?', [user_id, match_id], function(error, results, fields) {
+      console.log("insertGameWinner");
+      console.log(results);
+    });
+  });
+}
+
 var changeTurn = function(match_id) {
   connection.query('SELECT turn FROM games WHERE id = ?', [match_id], function(error, results, fields){
       let turn = results.turn === 'player1' ? 2 : 1;
@@ -151,6 +161,8 @@ var changeTurn = function(match_id) {
   });
 }
 
+
+module.exports.insertGameWinner = insertGameWinner;
 module.exports.changeTurn = changeTurn;
 module.exports.insertMove = insertMove;
 module.exports.getGame = getGame;

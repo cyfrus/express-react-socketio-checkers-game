@@ -155,6 +155,8 @@ class Game extends React.Component {
                     boardState,
                     selectedLocation: {row, square},
                     selected: true  
+                }, () => {
+                    console.log("Selected je " + this.state.selected);
                 });
             } else if(this.state.selected && !boardState[row][square].piece) {
                 socket.emit('checkMove', {
@@ -184,7 +186,7 @@ class Game extends React.Component {
     render() {
         let gameOver;
         if(this.state.gameOver) {
-            gameOver = (<div className="winner">WINNER: {this.state.winner}</div>);
+            gameOver = (<div className={"winner + winnerBox" + this.state.winner}>WINNER: {this.state.winner}</div>);
         }
         if(this.state.redirect) {
             return (<Redirect
