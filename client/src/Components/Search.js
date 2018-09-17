@@ -64,8 +64,9 @@ class Search extends React.Component {
   
     socket.on('startGame', (data) => {
       console.log(data);
+      sessionStorage.setItem('match_id', data.match_id.toString());
       this.setState({
-        gameID: data,
+        gameID: data.roomID,
         gameStatus: "ready"
       });
     });
@@ -74,7 +75,7 @@ class Search extends React.Component {
 
   filterGameList(gameList) {
     let filteredGames = gameList.filter(game => {
-      return game.status === "not started" && game.player1_ID !== parseInt(sessionStorage.getItem('id'));
+      return game.status === "not started" && game.player_id !== parseInt(sessionStorage.getItem('id'));
     });
     return filteredGames;
   }

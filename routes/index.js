@@ -24,11 +24,21 @@ router.get('/getGames', function(req, res, next) {
   });
 });
 router.post('/getMatchData', function(req, res, next){
-  db.getGame(req.body.user_id, result => {
-    let game = result[result.length-1];
-    game.MOVES = transformTextToMoves(game.MOVES);
-    res.json(game);
-  });
+    db.getGame(parseInt(req.body.match_id), result => {
+      let game = {
+        PLAYER1: result[0].username,
+        PLAYER2: result[1].username,
+        PLAYER1ID: result[0].player_id,
+        PLAYER2ID: result[1].player_id,
+        TURN: result[0].turn,
+        RED: result[0].red,
+        BLACK: result[0].black,
+        ROOM_ID: result[0].roomID,
+        MOVES: transformTextToMoves(result[0].moves),
+        MATCH_ID: result[0].game_ID
+      };
+      res.json(game);
+    });
 });
 
 router.post('/checkMove', function (req, res, next) {  

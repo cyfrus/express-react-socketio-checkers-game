@@ -75,13 +75,14 @@ class Game extends React.Component {
 
     componentDidMount() {
         axios.post('/getMatchData', {
-            user_id: parseInt(sessionStorage.getItem('id'))
+            user_id: parseInt(sessionStorage.getItem('id')),
+            match_id: parseInt(sessionStorage.getItem('match_id'))
           })
           .then(function (response) {
             if(response.data === "") {
                 console.log(response);
                 this.setState({
-                    redirect: true
+                    // redirect: true
                 },() => {
                     console.log( "redirect je " + this.state.redirect);
                 });
@@ -100,6 +101,7 @@ class Game extends React.Component {
                     boardState: response.data.MOVES
                     
                 }, () => {
+                    console.log(this.state);
                     socket.emit('checkIfUserIsInTheRoom', this.state.roomID); 
                     
                 });

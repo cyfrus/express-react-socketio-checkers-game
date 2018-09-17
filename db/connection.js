@@ -36,9 +36,9 @@ var insert_user = function(username, email, password, about, callback) {
 };
 
 
-var getGame = function(user_id, callback) {
-  console.log("GET GAME! + " + user_id);
-  connection.query('SELECT game.roomID as ROOM_ID, game.id as MATCH_ID, u1.id as PLAYER1ID, u2.id as PLAYER2ID, u1.username as PLAYER1, u2.username as PLAYER2, game.turn as TURN, game.moves as MOVES, game.red as RED, game.black as BLACK FROM games_users JOIN users u1 ON games_users.player1_ID = u1.id JOIN users u2 ON u2.id = player2_ID JOIN games game ON game.id = games_users.game_ID WHERE u1.id = ? OR u2.id = ? AND games_users.status = ?', [user_id,user_id, 1],function (error, results, fields){
+var getGame = function(match_id, callback) {
+  console.log("GET GAME! + " + match_id);
+  connection.query('SELECT * FROM games_users JOIN users u ON games_users.player_id = u.id JOIN games game ON game.id = games_users.game_ID WHERE games_users.game_ID = ? AND games_users.status', [match_id, 1],function (error, results, fields){
     if (error) throw error;
       callback(results);
   });
@@ -62,21 +62,23 @@ var getPlayers = function(callback) {
   connection.query("SELECT * FROM users", function(error, results, fields) {
     if (error) throw error;
     callback(results.length);
-  });
+  }); 
 }
 
 var joinMatch = function(player2_id, match_id, callback) {
-      connection.query('UPDATE games_users SET player2_ID = ?, status = ? WHERE game_ID = ?', [player2_id, 1, match_id], function (error, results, fields) {
+      connection.query('INSERT INTO games_users SET player_id = ?, status = ?, game_ID = ?', [player2_id, 1, match_id], function (error, results, fields) {
         if (error) {
           console.log(error);
           callback(false);
         } else {
-          connection.query("SELECT * FROM games WHERE id = ? ",[match_id], function(error, results, fields) {
-            if(error) {
-              callback(false);
-            } else {
-              callback(true, results[0].roomID);
-            }
+          connection.query("UPDATE games_users SET status = 1 WHERE game_ID = ?", [match_id], function(error, results, fields){
+            connection.query("SELECT * FROM games WHERE id = ? ",[match_id], function(error, results, fields) {
+              if(error) {
+                callback(false);
+              } else {
+                callback(true, results[0].roomID);
+              }
+            });
           });
         }
       });
@@ -92,7 +94,7 @@ var create_match = function(player_id, roomID, turn_time, callback) {
       callback(false);
     } else {
       let matchID = results.insertId;
-      connection.query('INSERT INTO games_users SET ?', {game_ID: results.insertId, player1_ID: player_id, status: 2}, function (error, results, fields) {
+      connection.query('INSERT INTO games_users SET ?', {game_ID: results.insertId, player_id: player_id, status: 2}, function (error, results, fields) {
         if (error) {
           console.log(error);
           callback(false);
@@ -106,18 +108,18 @@ var create_match = function(player_id, roomID, turn_time, callback) {
 
 var getAllGames = function(callback) {
   console.log("get all games!");
-  connection.query('SELECT * from games INNER JOIN games_users ON games_users.game_ID = games.id INNER JOIN users ON games_users.player1_ID = users.id WHERE games_users.status = 2', function(error, results, fields){
+  connection.query('SELECT * from games INNER JOIN games_users ON games_users.game_ID = games.id INNER JOIN users ON games_users.player_id = users.id WHERE games_users.status = 2', function(error, results, fields){
     if (error) throw error;
     callback(results);
   });
 }
 
 var deleteRoom = function(player_id, callback) {
-  connection.query('DELETE game FROM games game INNER JOIN games_users gu ON game.id = gu.game_ID WHERE gu.player1_ID = ? AND gu.status = ?',[player_id, 2], function (error, results, fields) {
+  connection.query('DELETE game FROM games game INNER JOIN games_users gu ON game.id = gu.game_ID WHERE gu.player_id = ? AND gu.status = ?',[player_id, 2], function (error, results, fields) {
     if (error) {
       callback(false)
     } else {
-      callback(results.affectedRows);
+      callback(true);
     }
   });
 }
@@ -143,9 +145,17 @@ var insertMove = function(match_id, moves, changeTurn, res) {
 }
 
 var insertGameWinner = function(match_id, winner) {
-  connection.query('SELECT g.' + winner + ' from games g INNER JOIN games_users gu ON gu.games_ID = g.id WHERE id = ?', [match_id], function(error, results, fields) {
-    console.log(results);
-    connection.query('UPDATE games_users SET winner = ? WHERE game_ID = ?', [user_id, match_id], function(error, results, fields) {
+  connection.query('SELECT * from games g INNER JOIN games_users gu ON gu.game_ID = g.id INNER JOIN users ON users.id = gu.player_id WHERE g.id = ?', [match_id], function(error, results, fields) {
+    if (error) throw error;
+    console.log("insertGameWinner " + match_id);
+    let winnerUsername;
+    if (winner === "player1") {
+        winnerUsername = results[0].username;
+    } else {
+        winnerUsername = results[1].username;
+    }
+    connection.query('UPDATE games_users SET winner = ?, status = ? WHERE game_ID = ?', [winnerUsername, 3, match_id], function(error, results, fields) {
+      if (error) throw error;
       console.log("insertGameWinner");
       console.log(results);
     });
@@ -161,7 +171,15 @@ var changeTurn = function(match_id) {
   });
 }
 
+var getMatchID = function(user_id, callback) {
+  connection.query('SELECT game_ID FROM games_users WHERE player_id = ? AND status = ?', [user_id, 1], function(error, results, fields){
+      console.log("getMatchID");
+      console.log(results[0]);
+      callback(results[0].game_ID);
+  });
+}
 
+module.exports.getMatchID = getMatchID;
 module.exports.insertGameWinner = insertGameWinner;
 module.exports.changeTurn = changeTurn;
 module.exports.insertMove = insertMove;

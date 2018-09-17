@@ -76,31 +76,30 @@ function availableMoves(row, square, move, boardState, turn) {
 }
 
 function gameOver(boardState) {
-  // console.log("game over function!");
-  //   var gameOver = "", redCount = 0, blackCount = 0, blackMoveCount = 0, redMoveCount = 0;
-  //   boardState.forEach((row, rowIndex) => {
-  //     row.forEach((square, squareIndex) => {
-  //         if(square.piece && square.pieceColor === "black") {
-  //           blackCount++;
-  //           blackMoveCount += getAvailableMoves(rowIndex, squareIndex, boardState);
-  //         } else if(square.piece && square.pieceColor === "red") {
-  //           redCount++;
-  //           redMoveCount += getAvailableMoves(rowIndex, squareIndex, boardState);
-  //         }
+  console.log("game over function!");
+    var gameOver = "", redCount = 0, blackCount = 0, blackMoveCount = 0, redMoveCount = 0;
+    boardState.forEach((row, rowIndex) => {
+      row.forEach((square, squareIndex) => {
+          if(square.piece && square.pieceColor === "black") {
+            blackCount++;
+            blackMoveCount += getAvailableMoves(rowIndex, squareIndex, boardState);
+          } else if(square.piece && square.pieceColor === "red") {
+            redCount++;
+            redMoveCount += getAvailableMoves(rowIndex, squareIndex, boardState);
+          }
           
-  //     });
-  //   });
-  //   console.log("number of red moves: " + redMoveCount);
-  //   console.log("number of black moves: " + blackMoveCount);
-  //   console.log("number of black pieces: " + blackCount);
-  //   console.log("number of red pieces: " + redCount);
-  //   if(!redCount || !redMoveCount) {
-  //     gameOver = "black";
-  //   } else if(!blackCount || !blackMoveCount) {
-  //     gameOver = "red";
-  //   }
-    // return gameOver;
-    return "red";
+      });
+    });
+    console.log("number of red moves: " + redMoveCount);
+    console.log("number of black moves: " + blackMoveCount);
+    console.log("number of black pieces: " + blackCount);
+    console.log("number of red pieces: " + redCount);
+    if(!redCount || !redMoveCount) {
+      gameOver = "black";
+    } else if(!blackCount || !blackMoveCount) {
+      gameOver = "red";
+    }
+    return gameOver;
 }
 
 function getAvailableMoves (row, square, boardState) {
@@ -156,6 +155,22 @@ function createGame(player_id, roomID, turn_time, callback) {
   });
 }
 
+function setGame(result) {
+  let game = {
+    PLAYER1: result[0].username,
+    PLAYER2: result[1].username,
+    PLAYER1ID: result[0].player_id,
+    PLAYER2ID: result[1].player_id,
+    TURN: result[0].turn,
+    RED: result[0].red,
+    BLACK: result[0].black,
+    ROOM_ID: result[0].roomID,
+    MOVES: result[0].moves,
+    MATCH_ID: result[0].game_ID
+  };
+  return game;
+}
+
 io.on('connection', function (socket) {
   socket.on('checkIfUserIsInTheRoom', function(room){
     console.log("provjera da li je korisnik u sobi!");
@@ -175,11 +190,11 @@ io.on('connection', function (socket) {
   });
 
   socket.on('checkMove', function(data){
-    db.getGame(data.user_id, (result) => {
-        let game = result[result.length-1],
-            moves = game.MOVES,
-            boardState = [], canJump, wasLastMoveJump, myTurn = false;
-            console.log(data);
+    db.getGame(data.match_id, (result) => {
+     let game = setGame(result),
+         moves = game.MOVES,
+         boardState = [], canJump, wasLastMoveJump, myTurn = false;
+         console.log(data);
         if(!moves) {
           boardState = setTheGame();
         } else {
@@ -195,15 +210,16 @@ io.on('connection', function (socket) {
 
         if (!myTurn && availableMoves(data.from.row, data.from.square, data.move, boardState, data.color)) {
             db.insertMove(data.match_id, moves + transformMoveToText(data.from, data.move, data.color), true, inserted => {
-              db.getGame(data.user_id, (res) => {
-                let updatedState = res[res.length-1];
-                console.log(res[res.length-1]);
+              db.getGame(data.match_id, (res) => {
+                let updatedState = setGame(res), winner;
                 updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-                if(gameOver(updatedState.MOVES) !== "") {
-                  console.log("gameOver + " );
-                  updatedState.WINNER = gameOver(updatedState.MOVES);
+                winner = gameOver(updatedState.MOVES);
+                console.log("WINNER JE " + winner);
+                if(winner !== "") {
+                  console.log("gameOver : " + winner);
+                  updatedState.WINNER = winner;
                   updatedState.GAMEOVER = true;
-                  db.insertGameWinner(data.match_id, data.user_id);
+                  db.insertGameWinner(data.match_id, winner);
                 } else {
                   updatedState.WINNER = "";
                   updatedState.GAMEOVER = false;
@@ -233,13 +249,15 @@ io.on('connection', function (socket) {
           });
           console.log("Can jump again: " + canJumpAgain);
           db.insertMove(data.match_id, moves + jumpToText(canJump, data.from, data.move, data.color), !canJumpAgain, inserted => {
-            db.getGame(data.user_id, (res) => {
-              let updatedState = res[res.length-1];
+            db.getGame(data.match_id, (res) => {
+              let updatedState = setGame(res), winner;
               updatedState.MOVES = transformTextToMoves(updatedState.MOVES);
-              if(gameOver(updatedState.MOVES)) {
+              winner = gameOver(updatedState.MOVES);
+              if(winner !== "") {
                 console.log("gameOver");
-                updatedState.WINNER = data.color;
+                updatedState.WINNER = winner;
                 updatedState.GAMEOVER = true;
+                db.insertGameWinner(data.match_id, winner);
               } else {
                 updatedState.WINNER = "";
                 updatedState.GAMEOVER = false;
@@ -255,7 +273,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('rejoinGame', function(data) {
-      db.getGame(data.user_id, (result) => {
+      db.getGame(data.match_id, (result) => {
         if(result.length) {
           socket.join(result[0].ROOM_ID);
           socket.gameRoom = result[0].ROOM_ID;
@@ -283,7 +301,7 @@ io.on('connection', function (socket) {
     db.joinMatch(data.user_id, data.match_id, (joinedGame, roomID) => {
       if(joinedGame) {
         socket.join(roomID);
-        io.to(roomID).emit('startGame', roomID);
+        io.to(roomID).emit('startGame', {roomID, match_id: data.match_id});
         console.log("joined game + match ID:" + data.match_id + " roomID + " + roomID);
         
       }
@@ -291,6 +309,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('deleteLobby', function() {
+    console.log("delete lobby!");
     if(socket.inLobby) {
       db.deleteRoom(socket.player_id, (deletedRoom) => {
         if(deletedRoom) {
@@ -324,6 +343,8 @@ io.on('connection', function (socket) {
 });
 
 var transformTextToMoves = function(moves) {
+  console.log("moves");
+  console.log(moves);
   let boardState = setTheGame(),
       start = 0, end = 7,
       fromRow, fromSquare, toRow, toSquare, color = "";
