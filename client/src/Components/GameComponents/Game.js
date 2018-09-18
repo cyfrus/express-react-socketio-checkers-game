@@ -198,8 +198,8 @@ class Game extends React.Component {
         />);
         }
         else {
-            let player1Color = this.state.RED === "player1" ? "red" : "black",
-            player2Color = this.state.BLACK === "player1" ? "black" : "red",
+            let player1Color = this.state.red === "player1" ? "red" : "black",
+            player2Color = this.state.black === "player2" ? "black" : "red",
             playersInfo = (
             <div className="playersInfo">
                 <div><div className="playerUsernameDiv">Player 1 : {this.state.player1}</div><div className={player1Color + " playerColor"}></div></div>

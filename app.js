@@ -302,8 +302,10 @@ io.on('connection', function (socket) {
       if(joinedGame) {
         socket.join(roomID);
         io.to(roomID).emit('startGame', {roomID, match_id: data.match_id});
+        db.getAllGames((result) => {
+          io.of('/').emit('updateGameList', result);
+        });
         console.log("joined game + match ID:" + data.match_id + " roomID + " + roomID);
-        
       }
     });
   });
