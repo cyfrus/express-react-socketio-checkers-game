@@ -14,7 +14,7 @@ class Square extends React.Component {
         );    
         } else {
             return (
-            <div className={"d-flex align-items-center square " + this.props.color + " " + selected} onClick={this.props.onClick}>
+            <div className={"d-flex align-items-center square " + this.props.color + "" + selected} onClick={this.props.onClick}>
             </div>
             );
         }

@@ -74,8 +74,8 @@ h1, h2, h3, h4, h5, h6 {
   color: #e74c3c;
 }
 .decline-btn {
-  border-color: red;
-  color: red;
+  border-color: #d63031;
+  color: #d63031;
 }
 body, html {
   height: 100%;
@@ -83,7 +83,7 @@ body, html {
 #root {
   height: 80%;
 }
-.App, .App .navContainer, .navContainer .row, .game {
+.App, .App .navContainer, .row, .game {
   height: 100%;
 }
 
@@ -91,24 +91,14 @@ body, html {
   height: 100%;
   padding: 0px 0px 0px 0px !important;
 }
-.board {
-  height: 100%;
-  width: 100%;
-}
-.boardRow {
-  height: 12.5%;
+
+/* .boardRow {
+  height: 10%;
   display:flex;
   flex-direction: row;
   justify-content: center;
-  margin: 0px;
-  padding: 0px;
-}
-.square {
-  border: 1px solid black;
-  height: 100%;
-  width: 12.5%;
-  padding: 0px;
-}
+} */
+
 .white {
   background-color: white;
 }
@@ -121,36 +111,30 @@ button:focus
 {
   outline: 0;
 }
-.board
+/* .playerred
 {
-  min-width: 500px;
-  margin-bottom: 20px;
-}
-
-.playerred
-{
-  margin: auto !important;
   border:1px solid transparent;
   height: 80%;
   width: 80%;
   background-color: #A31846;
   border-radius:100%;
+  position: absolute;
+  top: 5%;
+  left: 10%;
 }
 .playerblack
 {
-  margin: auto;
+  left: 10%;
+  top: 5%;
   border:1px solid transparent;
   height: 80%;
   width: 80%;
   background-color: #3A3335;
   border-radius:100%;
-}
+  position: absolute;
+} */
 
-.selected
-{
-   border: 2px solid #3A3335;
-   box-shadow: 0px 0px 10px #3A3335;
-}
+
 
 .brown
 {
@@ -205,9 +189,6 @@ button:focus
 
   padding: 20px;
 }
-.selected {
-  border: 1px solid red;
-}
 .registrationTitle, .loginTitle {
   margin-bottom: 20px;
 }
@@ -245,7 +226,7 @@ button:focus
   color: #A9E5BB;
 }
 .loginError {
-  color: red;
+  color: #d63031;
   font-weight: bold;
 }
 .list_menu li a {
@@ -342,7 +323,6 @@ button:focus
   background-color: white;
   padding:10px 20px;
 }
-
 .gameListItem {
   display: flex;
   flex-direction: row;
@@ -360,7 +340,7 @@ button:focus
 }
 
 .red {
-  background-color: red;
+  background-color: #d63031;
 }
 .black {
   background-color: black;
@@ -396,10 +376,62 @@ button:focus
 }
 
 .winnerBoxred {
-  box-shadow: 0px 0px 5px red;
-  border: 2px solid red;
+  box-shadow: 0px 0px 5px #d63031;
+  border: 2px solid #d63031;
 }
 .winnerBoxblack {
   box-shadow: 0px 0px 5px black;
   border: 2px solid black;
+}
+
+.boardRow {
+  height: 12.5%;
+  margin: 0px;
+} 
+.square {
+  float: left;
+  height: 100%;
+  width: 12.5%;
+  border: 2px solid transparent;
+}
+.board {
+  height: 80%;
+  width: 80%;
+  min-width: 500px;
+  max-width: 700px;
+  border: 1px solid lightgray;
+}
+.playerred {
+  background-color: #d63031;
+  border-radius: 100%;
+  border: 0px;
+  height: 80%;
+  width: 80%;
+  margin: auto;
+}
+.playerblack {
+  background-color: #2d3436;
+  border-radius: 100%;
+  border: 0px;
+  height: 80%;
+  width: 80%;
+  margin: auto;
+}
+.selected
+{
+   border: 2px solid #d63031;
+   box-shadow: 0px 0px 5px #d63031;
+}
+.sendMsg {
+  border: 1px solid lightgray;
+  margin-top: 30px;
+}
+
+.messageContainer {
+  height: 400px;
+  overflow: scroll;
+}
+.sendMsgInput {
+  margin-top: 10px;
+  width: 90% !important;
 }

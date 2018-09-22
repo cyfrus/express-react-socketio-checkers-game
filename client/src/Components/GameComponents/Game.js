@@ -48,9 +48,14 @@ class Game extends React.Component {
             match_id: null,
             roomID: '',
             redirect: false,
-            winner: ""
+            winner: "",
+            messages: [],
+            currentMessage: { text: ""}
         }
         this.handleClick = this.handleClick.bind(this);
+        this.setMsg = this.setMsg.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
+        this.handleEnter = this.handleEnter.bind(this);
     }
  
     checkIfmyTurn(gameInfo) { 
@@ -72,7 +77,7 @@ class Game extends React.Component {
         }
 
     }
-
+    
     componentDidMount() {
         axios.post('/getMatchData', {
             user_id: parseInt(sessionStorage.getItem('id')),
@@ -133,8 +138,9 @@ class Game extends React.Component {
             console.log("checkMoveResponse!");
         });
         socket.on('message', (data) => {
+            console.log("new message !");
             this.setState({
-                messages: this.state.messages.push(data.message)
+                messages: data.messages
             })
         });
         socket.on('reconnected', (data) => {
@@ -184,9 +190,35 @@ class Game extends React.Component {
             }
         }
     }
-
+    sendMessage() {
+        let message = this.state.currentMessage;
+        socket.emit('sendMessage', message);
+        this.setState({
+            currentMessage: { text: ""}
+        });
+    }
+    setMsg(event) {
+        let message = {
+            sender: sessionStorage.getItem('username'),
+            text: event.target.value,
+            match_id: this.state.match_id,
+            roomID: this.state.roomID
+        };
+        
+        this.setState({
+            currentMessage: message
+        });
+    }
+    handleEnter(e) {
+        if (e.key === 'Enter') {
+            this.sendMessage();
+          }
+    }
     render() {
-        let gameOver;
+        let gameOver, messages;
+        messages = this.state.messages.map((message, index) => {
+            return <li className="list-group-item" key={index}><strong>{message.sender} : </strong>{message.text}</li>
+        });
         if(this.state.gameOver) {
             gameOver = (<div className={"winner + winnerBox" + this.state.winner}>WINNER: {this.state.winner}</div>);
         }
@@ -210,11 +242,24 @@ class Game extends React.Component {
         );
         return (
             <div className="row">
-                <div className="game col-md-5">
+                <div className="col-8 game">
                 <h3>Turn: {this.state.turn}</h3>
                 {playersInfo}
                 {gameOver}
                 <Board squares={this.state.boardState} onClick={(row, square) => this.handleClick(row, square)} />
+                </div>
+                <div className="col-lg-4 col-md-12">
+                <div className="messages">
+                <h4>Messages</h4>
+                    <div className="messageContainer">
+                        <ul className="list-group list-group-flush">
+                            {messages}
+                        </ul>
+                    </div>
+                </div>
+                    
+                    <input className="sendMsgInput form-control" placeholder="send message" onKeyDown={this.handleEnter} value={this.state.currentMessage.text} onChange={this.setMsg} />
+                    <button className="btn btn-light sendMsg" onClick={this.sendMessage} name="message">Send</button>
                 </div>
             </div>
         );

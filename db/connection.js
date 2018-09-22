@@ -144,6 +144,20 @@ var insertMove = function(match_id, moves, changeTurn, res) {
   });
 }
 
+var insertMessage = function(match_id, message) {
+  console.log("insert move ! " + match_id + " " + message);
+  connection.query('UPDATE games SET messages = ? WHERE id = ?',[message, parseInt(match_id)], function(error, results, fields){
+    if (error) throw error;
+  });
+}
+
+var getMessages = function(match_id, callback) {
+  connection.query('SELECT messages from games WHERE id = ?', [match_id], function(error, results, fields){
+      console.log(results[0]);
+      callback(results[0].messages);
+  });
+}
+
 var insertGameWinner = function(match_id, winner) {
   connection.query('SELECT * from games g INNER JOIN games_users gu ON gu.game_ID = g.id INNER JOIN users ON users.id = gu.player_id WHERE g.id = ?', [match_id], function(error, results, fields) {
     if (error) throw error;
@@ -179,6 +193,14 @@ var getMatchID = function(user_id, callback) {
   });
 }
 
+var getPlayer = function(user_id) {
+  connection.query("SELECT * from users WHERE id = ?", [user_id], function(error, results, fields){
+      
+  });
+}
+
+module.exports.getMessages = getMessages;
+module.exports.insertMessage = insertMessage;
 module.exports.getMatchID = getMatchID;
 module.exports.insertGameWinner = insertGameWinner;
 module.exports.changeTurn = changeTurn;

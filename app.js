@@ -324,7 +324,22 @@ io.on('connection', function (socket) {
       });
     }
   });
-
+  socket.on('sendMessage', function(data) {
+    console.log(data);
+    db.getMessages(data.match_id, (result) => {
+      let msgObject;
+      if(result === '') {
+        msgObject = {
+          messages: []
+       };
+      } else {
+        msgObject = JSON.parse(result);
+      }
+      msgObject.messages.push(data);
+      db.insertMessage(data.match_id, JSON.stringify(msgObject));
+      io.in(data.roomID.toString()).emit('message', msgObject);
+    });
+  });
   socket.on('disconnect', function () {
     if(socket.inLobby) {
       db.deleteRoom(socket.player_id, (deletedRoom) => {

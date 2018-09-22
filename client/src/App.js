@@ -4,7 +4,7 @@ import "./App.css";
 import Navigation from "./Navigation";
 
 const App = () => (
-  <div className="App container-fluid">
+  <div className="App container">
     <Navigation />
   </div>
 );
