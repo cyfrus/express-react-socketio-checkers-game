@@ -103,7 +103,8 @@ class Game extends React.Component {
                     red: response.data.RED,
                     black: response.data.BLACK,
                     roomID: response.data.ROOM_ID,
-                    boardState: response.data.MOVES
+                    boardState: response.data.MOVES,
+                    messages: response.data.MESSAGES
                     
                 }, () => {
                     console.log(this.state);
@@ -216,9 +217,11 @@ class Game extends React.Component {
     }
     render() {
         let gameOver, messages;
-        messages = this.state.messages.map((message, index) => {
-            return <li className="list-group-item" key={index}><strong>{message.sender} : </strong>{message.text}</li>
-        });
+        if(this.state.messages && this.state.messages.length){
+            messages = this.state.messages.map((message, index) => {
+                return <li className="list-group-item" key={index}><strong>{message.sender} : </strong>{message.text}</li>
+            });
+        }
         if(this.state.gameOver) {
             gameOver = (<div className={"winner + winnerBox" + this.state.winner}>WINNER: {this.state.winner}</div>);
         }

@@ -25,6 +25,13 @@ router.get('/getGames', function(req, res, next) {
 });
 router.post('/getMatchData', function(req, res, next){
     db.getGame(parseInt(req.body.match_id), result => {
+      console.log(result[0]);
+      let messages;
+      if(result[0].messages === "") {
+        messages = [];
+      } else {
+        messages = JSON.parse(result[0].messages);
+      }
       let game = {
         PLAYER1: result[0].username,
         PLAYER2: result[1].username,
@@ -35,7 +42,8 @@ router.post('/getMatchData', function(req, res, next){
         BLACK: result[0].black,
         ROOM_ID: result[0].roomID,
         MOVES: transformTextToMoves(result[0].moves),
-        MATCH_ID: result[0].game_ID
+        MATCH_ID: result[0].game_ID,
+        MESSAGES: messages.messages
       };
       res.json(game);
     });

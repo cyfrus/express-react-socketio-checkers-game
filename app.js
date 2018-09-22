@@ -166,7 +166,8 @@ function setGame(result) {
     BLACK: result[0].black,
     ROOM_ID: result[0].roomID,
     MOVES: result[0].moves,
-    MATCH_ID: result[0].game_ID
+    MATCH_ID: result[0].game_ID,
+    MESSAGES: JSON.parse(result[0].messages)
   };
   return game;
 }
