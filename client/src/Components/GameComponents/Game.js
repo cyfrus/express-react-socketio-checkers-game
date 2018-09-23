@@ -131,7 +131,8 @@ class Game extends React.Component {
                 boardState: data.MOVES,
                 messages: [],
                 winner: data.WINNER,
-                gameOver: data.GAMEOVER
+                gameOver: data.GAMEOVER,
+                messages: data.MESSAGES.messages
             });
             console.log(data);
         });
@@ -251,7 +252,7 @@ class Game extends React.Component {
                 {gameOver}
                 <Board squares={this.state.boardState} onClick={(row, square) => this.handleClick(row, square)} />
                 </div>
-                <div className="col-lg-4 col-md-12">
+                <div className="col-lg-4 col-md-12 mainMsgDiv">
                 <div className="messages">
                 <h4>Messages</h4>
                     <div className="messageContainer">
@@ -262,7 +263,7 @@ class Game extends React.Component {
                 </div>
                     
                     <input className="sendMsgInput form-control" placeholder="send message" onKeyDown={this.handleEnter} value={this.state.currentMessage.text} onChange={this.setMsg} />
-                    <button className="btn btn-light sendMsg" onClick={this.sendMessage} name="message">Send</button>
+                    <button className="btn btn-light form-control sendMsg" onClick={this.sendMessage} name="message">Send</button>
                 </div>
             </div>
         );

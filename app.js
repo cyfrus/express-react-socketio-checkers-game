@@ -156,6 +156,12 @@ function createGame(player_id, roomID, turn_time, callback) {
 }
 
 function setGame(result) {
+  let messages;
+  if(result[0].messages === "") {
+    messages = [];
+  } else {
+    messages = JSON.parse(result[0].messages).messages;
+  }
   let game = {
     PLAYER1: result[0].username,
     PLAYER2: result[1].username,
@@ -167,7 +173,7 @@ function setGame(result) {
     ROOM_ID: result[0].roomID,
     MOVES: result[0].moves,
     MATCH_ID: result[0].game_ID,
-    MESSAGES: JSON.parse(result[0].messages)
+    MESSAGES: JSON.parse(messages)
   };
   return game;
 }

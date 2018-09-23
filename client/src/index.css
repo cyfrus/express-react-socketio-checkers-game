@@ -400,6 +400,7 @@ button:focus
   min-width: 500px;
   max-width: 700px;
   border: 1px solid lightgray;
+  box-shadow: 0px 0px 3px lightgray;
 }
 .playerred {
   background-color: #d63031;
@@ -425,13 +426,18 @@ button:focus
 .sendMsg {
   border: 1px solid lightgray;
   margin-top: 30px;
+  width: 95%;
 }
 
 .messageContainer {
   height: 400px;
   overflow: scroll;
 }
+.messages {
+  box-shadow: 0px 0px 3px lightgray;
+  padding: 5px;
+}
 .sendMsgInput {
   margin-top: 10px;
-  width: 90% !important;
+  width: 95% !important;
 }
