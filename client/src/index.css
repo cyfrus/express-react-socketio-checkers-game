@@ -39,7 +39,8 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid lightgray;
 }
 .playerButton {
-  float: right;
+  float: left;
+  margin-bottom: 20px;
 }
 .searchbutton {
   margin-top: 30px;
@@ -83,9 +84,7 @@ body, html {
 #root {
   height: 80%;
 }
-.App, .App .navContainer, .row, .game {
-  height: 100%;
-}
+
 
 .boardColumn {
   height: 100%;
@@ -192,6 +191,12 @@ button:focus
 .registrationTitle, .loginTitle {
   margin-bottom: 20px;
 }
+.registrationLink {
+  color: #e74c3c;
+}
+.registrationLink:hover {
+  color: #e74c3c;
+}
 .registrationButton, .registrationLink, .loginButton {
   margin-top: 25px;
   display: block;
@@ -245,12 +250,11 @@ button:focus
 .infoBannerRow {
   background-color: #e74c3c;
   margin-top: 100px;
+  padding: 30px;
 }
 .infoBanner, .infoBanner2 {
-  height: 200px;
   font-size: 1.7em;
   text-align: center;
-  margin-top: 120px;
 }
 
 .brag-paragraph {
@@ -395,8 +399,8 @@ button:focus
   border: 2px solid transparent;
 }
 .board {
-  height: 80%;
-  width: 80%;
+  height: 500px;
+  width: 500px;
   min-width: 500px;
   max-width: 700px;
   border: 1px solid lightgray;
@@ -440,4 +444,43 @@ button:focus
 .sendMsgInput {
   margin-top: 10px;
   width: 95% !important;
+}
+
+.sendMsgInpu:active, .sendMsgInput:focus {
+  box-shadow: 0px 0px 3px #d63031;
+  border: 1px solid #d63031;
+}
+.takenFrom {
+  margin: 50px;
+  display: block;
+  font-weight: bold;
+  color: #d63031;
+}
+.takenFrom:hover {
+  color: #d63031;
+}
+.howToPlayDiv {
+  margin-top: 50px;
+}
+.gameImage {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+#rulesAnchor {
+  font-weight: bold;
+  color: black;
+  text-transform: uppercase;
+  text-decoration: underline;
+}
+.githubLink {
+  color: #d63031;
+}
+
+.githubLink:hover {
+  color: #d63031;
+  text-decoration: underline;
+}
+.mainMsgDiv {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }

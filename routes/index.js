@@ -8,6 +8,13 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+
+router.get('/stats', function(req, res, next) {
+  db.stats(results => {
+    res.json(results);
+  });
+});
+
 router.get('/test', function (req, res, next){
   res.json({ test: "test"});
 });
@@ -78,6 +85,12 @@ router.get('/getNumOfPlayers', function(req, res, next){
     res.json({
       numberOfPlayers: result
     });
+  });
+});
+
+router.get('/getNumberOfGames', function(req, res, next){
+  db.getNumberOfGames((result) => {
+      res.json(result[0]);
   });
 });
 

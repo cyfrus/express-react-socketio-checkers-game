@@ -15,7 +15,6 @@ class Search extends React.Component {
       gameID: "",
       gameStatus: null,
       gameModeDescriptionPlayer: "Play against another player randomly found. Every game counts and win adds you 25 points to your MMR (Match making ratio), losing the match removes 25 points from your existing MMR. MMR can not go lower than 0.",
-      gameModeDescriptionAI: "Play against computer that randomly moves pieces. This game mode serves as practice to new players that maybe are not that familiar with checkers.",
       gameList: [],
       displayList: [],
       inLobby: false,
@@ -193,7 +192,7 @@ class Search extends React.Component {
             <h4 className="searchTitle">Search for game</h4>
             <div>
               <div className="form-group">
-                <button
+                {/* <button
                   onClick={this.selectOpponent}
                   name="ai"
                   className={
@@ -203,7 +202,7 @@ class Search extends React.Component {
                   }
                 >
                   Play against AI
-                </button>
+                </button> */}
                 <button
                   onClick={this.selectOpponent}
                   name="player"

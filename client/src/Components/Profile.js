@@ -44,16 +44,10 @@ class Profile extends React.Component {
                     About: {this.state.about}
                 </div>
                 <div>
-                    Single Player matches: {this.state.spMatches}
+                    Matches: {this.state.mpMatches}
                 </div>
                 <div>
-                    Single Player matches won: {this.state.spMatchesWon}
-                </div>
-                <div>
-                    Multiplayer matches: {this.state.mpMatches}
-                </div>
-                <div>
-                    Multiplayer matches won: {this.state.mpMatchesWon}
+                    Matches won: {this.state.mpMatchesWon}
                 </div>
                 <button className="btn btn-danger" onClick={this.turnOnEdit}>Edit your information</button>
                 </div>

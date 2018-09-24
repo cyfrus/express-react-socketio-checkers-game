@@ -35,6 +35,12 @@ var insert_user = function(username, email, password, about, callback) {
   
 };
 
+var stats = function(callback) {
+  connection.query('SELECT * from games JOIN games_users ON games_users.game_ID = games.id JOIN users ON users.id = games_users.player_id GROUP BY games.id', function(error, results, fields) {
+    if(error) throw error;
+      callback(results);
+  });
+}
 
 var getGame = function(match_id, callback) {
   console.log("GET GAME! + " + match_id);
@@ -199,6 +205,14 @@ var getPlayer = function(user_id) {
   });
 }
 
+var getNumberOfGames = function(callback) {
+  connection.query("SELECT COUNT(id) AS numberOfMatches FROM games", function(error, results, fields){
+      callback(results);
+  });
+}
+
+module.exports.stats = stats;
+module.exports.getNumberOfGames = getNumberOfGames;
 module.exports.getMessages = getMessages;
 module.exports.insertMessage = insertMessage;
 module.exports.getMatchID = getMatchID;

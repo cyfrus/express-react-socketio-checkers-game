@@ -141,6 +141,7 @@ class Rules extends React.Component {
             the opponent).
           </li>
         </ul>
+        <a className="takenFrom" href="https://www.thesprucecrafts.com/play-checkers-using-standard-rules-409287">Taken from thesprucecrafts.</a>
         </div>
       </div>
     );

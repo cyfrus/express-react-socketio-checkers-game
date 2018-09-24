@@ -7,7 +7,7 @@ import {
 } from 'react-router-dom';
 import Login, {authenticated} from './Components/Login';
 import Home from './Components/Home';
-import Tournaments from './Components/Tournaments';
+import Stats from './Components/Stats';
 import About from './Components/About';
 import Rules from './Components/Rules';
 import Search from './Components/Search';
@@ -22,7 +22,7 @@ const Navigation = () => (
       <PrivateRoute path="/search" component={Search} />
       <PrivateRoute exact path="/" component={Home} />
       <PublicRoute path="/login" component={Login} />
-      <PrivateRoute path="/stats" component={Tournaments} />
+      <PrivateRoute path="/stats" component={Stats} />
       <PrivateRoute path="/rules" component={Rules} />
       <PrivateRoute path="/about" component={About} />
       <PrivateRoute path="/profile" component={Profile} />
@@ -49,7 +49,7 @@ const AuthButton = withRouter(
         </button>
       </p>
     ) : (
-      <div>You are not logged in.</div>
+      <div></div>
     )
 )
 

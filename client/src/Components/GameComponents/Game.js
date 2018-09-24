@@ -1,6 +1,5 @@
 import React from "react";
 import Board from "./Board";
-import io from "socket.io-client";
 import {Socket} from "../Search";
 import axios from "axios";
 import {Redirect} from "react-router-dom";
@@ -47,10 +46,12 @@ class Game extends React.Component {
             color: "",
             match_id: null,
             roomID: '',
-            redirect: false,
+            redirect: sessionStorage.getItem('match_id') ? false : true,
             winner: "",
             messages: [],
-            currentMessage: { text: ""}
+            currentMessage: {
+                text: ""
+            }
         }
         this.handleClick = this.handleClick.bind(this);
         this.setMsg = this.setMsg.bind(this);
@@ -79,43 +80,45 @@ class Game extends React.Component {
     }
     
     componentDidMount() {
-        axios.post('/getMatchData', {
-            user_id: parseInt(sessionStorage.getItem('id')),
-            match_id: parseInt(sessionStorage.getItem('match_id'))
-          })
-          .then(function (response) {
-            if(response.data === "") {
-                console.log(response);
-                this.setState({
-                    // redirect: true
-                },() => {
-                    console.log( "redirect je " + this.state.redirect);
-                });
-            } else {
-                console.log(response);
-                this.setState({
-                    player1: response.data.PLAYER1,
-                    player2: response.data.PLAYER2,
-                    turn: response.data.TURN,
-                    myTurn : this.checkIfmyTurn(response.data),
-                    color: this.getColor(response.data),
-                    match_id: response.data.MATCH_ID,
-                    red: response.data.RED,
-                    black: response.data.BLACK,
-                    roomID: response.data.ROOM_ID,
-                    boardState: response.data.MOVES,
-                    messages: response.data.MESSAGES
-                    
-                }, () => {
-                    console.log(this.state);
-                    socket.emit('checkIfUserIsInTheRoom', this.state.roomID); 
-                    
-                });
-            } 
-          }.bind(this))
-          .catch(function (error) {
-            console.log(error);
-          });
+        if(sessionStorage.getItem('match_id')) {
+            axios.post('/getMatchData', {
+                user_id: parseInt(sessionStorage.getItem('id')),
+                match_id: parseInt(sessionStorage.getItem('match_id'))
+              })
+              .then(function (response) {
+                if(response.data === "") {
+                    console.log(response);
+                    this.setState({
+                        redirect: true
+                    },() => {
+                        console.log( "redirect je " + this.state.redirect);
+                    });
+                } else {
+                    console.log(response);
+                    this.setState({
+                        player1: response.data.PLAYER1,
+                        player2: response.data.PLAYER2,
+                        turn: response.data.TURN,
+                        myTurn : this.checkIfmyTurn(response.data),
+                        color: this.getColor(response.data),
+                        match_id: response.data.MATCH_ID,
+                        red: response.data.RED,
+                        black: response.data.BLACK,
+                        roomID: response.data.ROOM_ID,
+                        boardState: response.data.MOVES,
+                        messages: response.data.MESSAGES
+                        
+                    }, () => {
+                        console.log(this.state);
+                        socket.emit('checkIfUserIsInTheRoom', this.state.roomID); 
+                    });
+                } 
+              }.bind(this))
+              .catch(function (error) {
+                console.log(error);
+              });
+        }
+        
 
         socket.on('updateBoardState', (data) => {
             this.setState({
@@ -132,21 +135,16 @@ class Game extends React.Component {
                 messages: [],
                 winner: data.WINNER,
                 gameOver: data.GAMEOVER,
-                messages: data.MESSAGES.messages
+                messages: data.MESSAGES
             });
             console.log(data);
         });
-        socket.on('checkMoveResponse', (data) => {
-            console.log("checkMoveResponse!");
-        });
+        
         socket.on('message', (data) => {
             console.log("new message !");
             this.setState({
                 messages: data.messages
             })
-        });
-        socket.on('reconnected', (data) => {
-            console.log(data);
         });
         
     }
@@ -193,11 +191,14 @@ class Game extends React.Component {
         }
     }
     sendMessage() {
-        let message = this.state.currentMessage;
-        socket.emit('sendMessage', message);
-        this.setState({
-            currentMessage: { text: ""}
-        });
+        if (this.state.currentMessage.text !== "") {
+            let message = this.state.currentMessage;
+            socket.emit('sendMessage', message);
+            this.setState({
+                currentMessage: { text: ""}
+            });
+        }   
+        
     }
     setMsg(event) {
         let message = {
@@ -240,7 +241,6 @@ class Game extends React.Component {
             <div className="playersInfo">
                 <div><div className="playerUsernameDiv">Player 1 : {this.state.player1}</div><div className={player1Color + " playerColor"}></div></div>
                 <div><div className="playerUsernameDiv">Player 2 : {this.state.player2}</div><div className={player2Color + " playerColor"}></div></div>
-                
             </div>
             
         );

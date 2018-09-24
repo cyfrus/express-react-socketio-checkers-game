@@ -90,10 +90,6 @@ function gameOver(boardState) {
           
       });
     });
-    console.log("number of red moves: " + redMoveCount);
-    console.log("number of black moves: " + blackMoveCount);
-    console.log("number of black pieces: " + blackCount);
-    console.log("number of red pieces: " + redCount);
     if(!redCount || !redMoveCount) {
       gameOver = "black";
     } else if(!blackCount || !blackMoveCount) {
@@ -157,6 +153,7 @@ function createGame(player_id, roomID, turn_time, callback) {
 
 function setGame(result) {
   let messages;
+  console.log(result);
   if(result[0].messages === "") {
     messages = [];
   } else {
@@ -173,7 +170,7 @@ function setGame(result) {
     ROOM_ID: result[0].roomID,
     MOVES: result[0].moves,
     MATCH_ID: result[0].game_ID,
-    MESSAGES: JSON.parse(messages)
+    MESSAGES: messages
   };
   return game;
 }
@@ -367,8 +364,6 @@ io.on('connection', function (socket) {
 });
 
 var transformTextToMoves = function(moves) {
-  console.log("moves");
-  console.log(moves);
   let boardState = setTheGame(),
       start = 0, end = 7,
       fromRow, fromSquare, toRow, toSquare, color = "";
@@ -381,8 +376,6 @@ var transformTextToMoves = function(moves) {
       color = "red";
     }
     if(move.slice(0, 5) === "DELET") {
-      console.log(move);
-      console.log("skok!");
       let delRow = move.slice(5,6),
           delSquare = move.slice(6, 7)
       boardState[delRow][delSquare].piece = false;
@@ -431,10 +424,9 @@ function generateRoomName() {
   return roomId;
 }
 
-app.use(function(req, res, next){
-  res.io = io;
-  next();
-});
+
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
